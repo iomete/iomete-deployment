@@ -1,0 +1,15 @@
+auth:
+  enablePostgresUser: true
+  postgresPassword: "onXB8UbEqYzkQFgbXe8F#C5ckmyKix&"
+
+primary:
+  persistence:
+    enabled: true
+    accessModes:
+      - ReadWriteOnce
+    size: 8Gi
+  extendedConfiguration: |
+    max_connections=500
+
+backup:
+  enabled: false

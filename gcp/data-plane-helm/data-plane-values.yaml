@@ -1,0 +1,76 @@
+# Name for the data plane.
+# If you have multiple data-planes, provide a distinguish name for each.
+name: iomete-community
+
+# Data Plane admin user
+adminUser:
+  username: "admin"
+  email: "admin@example.com"
+  firstName: Admin
+  lastName: Admin
+  temporaryPassword: "admin" # you will be prompted to change this on first login
+
+database:
+  # Currently only postgresql supported. For mysql please contact support.
+  type: postgresql
+  host: "postgresql"
+  port: "5432"
+  user: "iomete_user"
+  password: "iomete_pass"
+  # if passwordSecret is set, the password will be read from the secret
+  passwordSecret: {}
+    # name: byo-db-creds
+  # key: password
+  prefix: "iomete_" # all IOMETE databases will be prefixed with this. See database init script.
+  # Provide database admin credentials to create the IOMETE databases, otherwise please run the database init script manually.
+  adminCredentials:
+    user: "postgres"
+    password: "onXB8UbEqYzkQFgbXe8F#C5ckmyKix&"
+    # # if passwordSecret is set, the password will be read from the secret
+    passwordSecret: {}
+    #   # name: byo-db-creds
+    #   # key: password
+  ssl:
+    enabled: false # Enabling this will require javaTrustStore to be enabled and configured properly
+    mode: "disable" # disable, verify-full
+
+spark:
+  logLevel: warn
+
+keycloak:
+  enabled: true
+  adminUser: "kc_admin"
+  adminPassword: "Admin_123"
+  # if adminPasswordSecret is set, the password will be read from the secret
+  adminPasswordSecret: {}
+    # name: secret-name
+  # key: password
+  # Change this if enabled is set to false, or controlPlane is enabled
+  endpoint: "http://keycloak-http/auth"
+
+clusterDomain: cluster.local
+
+docker:
+  repo: iomete
+  pullPolicy: Always
+  appVersion: 1.9.3
+  sparkVersion: 3.5.1
+  imagePullSecrets: []
+  # - name: your-image-pull-secret
+
+jupyterGateway:
+  kernels:
+    - pyspark_kernel
+    - spark_scala_kernel
+
+# If you use self-signed certificates for the database or other external sources,
+# you can provide the truststore.jks file with your rootCA certificate
+javaTrustStore:
+  enabled: false
+  secretName: java-truststore # Name of the secret with the truststore.jks file
+  fileName: truststore.jks
+  password: changeit
+  mountPath: /etc/ssl/iomete-certs
+
+ingress:
+  httpsEnabled: true

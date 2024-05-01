@@ -20,15 +20,14 @@ database:
   # if passwordSecret is set, the password will be read from the secret
   passwordSecret: {}
     # name: byo-db-creds
-    # key: password
+  # key: password
   prefix: "iomete_" # all IOMETE databases will be prefixed with this. See database init script.
-  
   # Provide database admin credentials to create the IOMETE databases, otherwise please run the database init script manually.
   adminCredentials:
     user: "postgres"
     password: "onXB8UbEqYzkQFgbXe8F#C5ckmyKix&"
     # # if passwordSecret is set, the password will be read from the secret
-    # passwordSecret: {}
+    passwordSecret: {}
     #   # name: byo-db-creds
     #   # key: password
   ssl:
@@ -45,7 +44,7 @@ keycloak:
   # if adminPasswordSecret is set, the password will be read from the secret
   adminPasswordSecret: {}
     # name: secret-name
-    # key: password
+  # key: password
   # Change this if enabled is set to false, or controlPlane is enabled
   endpoint: "http://keycloak-http/auth"
 
@@ -54,7 +53,7 @@ clusterDomain: cluster.local
 docker:
   repo: iomete
   pullPolicy: Always
-  appVersion: 1.9.3
+  appVersion: 1.9.4
   sparkVersion: 3.5.1
   imagePullSecrets: []
   # - name: your-image-pull-secret
@@ -74,4 +73,4 @@ javaTrustStore:
   mountPath: /etc/ssl/iomete-certs
 
 ingress:
-  httpsEnabled: false
+  httpsEnabled: true

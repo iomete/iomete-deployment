@@ -3,11 +3,21 @@ auth:
   postgresPassword: "onXB8UbEqYzkQFgbXe8F#C5ckmyKix&"
 
 primary:
+
+  resources:
+    requests:
+      cpu: 100m
+      memory: 128Mi
+    limits:
+      cpu: 1
+      memory: 1024Mi
+
+
   persistence:
     enabled: true
     accessModes:
       - ReadWriteOnce
-    size: 8Gi
+    size: 10Gi
   extendedConfiguration: |
     max_connections=500
 

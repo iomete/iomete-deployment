@@ -1,8 +1,8 @@
 # IOMETE Data Plane Helm - GCP Community Version
 
-Helm Repository: https://chartmuseum.iomete.com
-Chart Name: iomete-data-plane-community-gcp
-Latest Version: 1.9.3
+- **Helm Repository:** https://chartmuseum.iomete.com
+- **Chart Name:** `iomete-data-plane-community-gcp`
+- **Latest Version:** `1.9.3`
 
 ## Quick Start
 

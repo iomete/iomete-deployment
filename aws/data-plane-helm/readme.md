@@ -1,8 +1,8 @@
 # IOMETE Data Plane Helm - AWS Community Version
 
-Helm Repository: https://chartmuseum.iomete.com
-Chart Name: iomete-data-plane-community-aws
-Latest Version: 1.9.4
+- **Helm Repository:** https://chartmuseum.iomete.com
+- **Chart Name:** `iomete-data-plane-community-aws`
+- **Latest Version:** `1.9.4`
 
 ## Quick Start
 

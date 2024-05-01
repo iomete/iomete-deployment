@@ -1,5 +1,23 @@
 # IOMETE Data Plane Helm - AWS Community Version
 
+Helm Repository: https://chartmuseum.iomete.com
+Chart Name: iomete-data-plane-community-aws
+Latest Version: 1.9.4
+
+## Quick Start
+
+```shell
+# Add IOMETE helm repo
+helm repo add iomete https://chartmuseum.iomete.com
+helm repo update
+
+
+# Deploy IOMETE Data Plane (to customize the installation see the Configuration section)
+helm upgrade --install -n iomete-system iomete-data-plane \
+  iomete/iomete-data-plane-community-aws --version 1.9 \
+  --set ingress.httpsEnabled=false
+```
+
 ## Configuration
 
 ### 1. General Configuration
@@ -76,7 +94,7 @@ Keycloak is the identity provider used for authentication, user management in th
 |---------------------|----------------------------------------------------------------------------------------------------------|---------------|
 | clusterDomain       | Kubernetes cluster domain.                                                                               | cluster.local |
 | docker.repo         | Docker repository for pulling images. If you want to use a custom repository, you can change this value. | iomete        |
-| docker.appVersion   | Version of the application Docker images                                                                 | 1.9.3         |
+| docker.appVersion   | Version of the application Docker images                                                                 | 1.9.4         |
 | docker.sparkVersion | Spark version for the Docker image.                                                                      | 3.5.1         |
 
 ### 7. Jupyter Gateway Configuration

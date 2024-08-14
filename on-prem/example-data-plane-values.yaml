@@ -1,0 +1,27 @@
+database:
+  type: postgresql
+  host: "postgresql"
+  port: "5432"
+  user: "iomete_user"
+  password: "iomete_pass"
+  prefix: "iomete_" # all IOMETE databases should be prefixed with this. See database init script.
+  adminCredentials:
+    user: "postgres"
+    password: "onXB8UbEqYzkQFgbXe8F#C5ckmyKix&"
+  ssl:
+    enabled: false # Enabling this will require javaTrustStore to be enabled and configured properly
+    mode: "disable" # disable, verify-full
+
+storage:
+  bucketName: "lakehouse"
+  type: "minio"
+  minioSettings:
+    endpoint: "http://minio:9000"
+    accessKey: "admin"
+    secretKey: "password"
+
+spark:
+  logLevel: info
+
+ingress:
+  httpsEnabled: false

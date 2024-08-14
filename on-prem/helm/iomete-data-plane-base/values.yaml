@@ -1,0 +1,5 @@
+mutatingWebhookConfiguration:
+  deploy: true
+
+docker:
+  imagePullSecrets: []

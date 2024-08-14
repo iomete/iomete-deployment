@@ -1,0 +1,170 @@
+# Name for the data plane.
+# If you have multiple data-planes, provide a distinguish name for each.
+name: iomete-data-plane
+
+# Data Plane admin user
+adminUser:
+  username: "admin"
+  email: "admin@example.com"
+  firstName: Admin
+  lastName: Admin
+  temporaryPassword: "admin" # you will be prompted to change this on first login
+
+database:
+  # Currently only postgresql supported. For mysql please contact support.
+  type: postgresql
+  host: "postgresql"
+  port: "5432"
+  user: "iomete_user"
+  password: "iomete_pass"
+  # if passwordSecret is set, the password will be read from the secret
+  passwordSecret: {}
+    # name: byo-db-creds
+    # key: password
+  prefix: "iomete_" # all IOMETE databases will be prefixed with this. See database init script.
+  # Provide database admin credentials to create the IOMETE databases, otherwise please run the database init script manually.
+  adminCredentials: {}
+    # user: "postgres"
+    # password: "password"
+    # # if passwordSecret is set, the password will be read from the secret
+    # passwordSecret: {}
+    #   # name: byo-db-creds
+    #   # key: password
+  ssl:
+    enabled: false # Enabling this will require javaTrustStore to be enabled and configured properly
+    mode: "disable" # disable, verify-full
+
+spark:
+  logLevel: info
+
+keycloak:
+  enabled: true
+  adminUser: "kc_admin"
+  adminPassword: "Admin_123"
+  # if adminPasswordSecret is set, the password will be read from the secret
+  adminPasswordSecret: {}
+    # name: secret-name
+    # key: password
+  # Change this if enabled is set to false, or controlPlane is enabled
+  endpoint: "http://keycloak-http/auth"
+
+storage:
+  bucketName: "lakehouse"
+  # minio, dell_ecs, aws_s3, gcs, azure_gen1
+  type: "minio"
+  dellEcsSettings: {}
+  minioSettings: {}
+    # endpoint: "http://minio.default.svc.cluster.local:9000"
+    # accessKey: "admin"
+    # secretKey: "password"
+    # # if secretKeySecret is set, the secretKey will be read from the secret
+    # secretKeySecret: {}
+    #   # name: secret-name
+    #   # key: secret-key
+  azureSettings: {}
+    # storageAccountName: ""
+    # storageAccountKey: ""
+
+clusterDomain: cluster.local
+
+docker:
+  repo: iomete
+  pullPolicy: Always
+  sparkVersion: 3.5.1-v2
+  imagePullSecrets: []
+  # - name: your-image-pull-secret
+
+dataCatalog:
+  enabled: true
+  # Allocated memory for Typesense search engine
+  storageSize: 1Gi
+  # This enables the PII detection feature in the data catalog. It will also install the Presidio Docker image.
+  piiDetection: false
+
+# Data Security Module
+ranger:
+  enabled: true
+  audit:
+    enabled: false
+
+jupyterGateway:
+  kernels:
+    - pyspark_kernel
+    - spark_scala_kernel
+
+# Set `true` if prometheus-stack is installed in the cluster
+# You can install it with a separate helm chart
+monitoring:
+  enabled: false
+  # This annotations will be added to the iom-core, iom-sql, iom-identity service when #monitoring.enabled is set to true
+  iomServices:
+    metricAnnotations:
+      prometheus.io/scrape: "true"
+      prometheus.io/path: "/q/metrics"
+      prometheus.io/port: "http"
+      prometheus.io/scheme: "http"
+      prometheus.io/interval: "15s"
+
+  sparkOperator:
+    # This annotations will be added to the Spark Operator Deployment when #monitoring.enabled is set to true
+    metricAnnotations:
+      prometheus.io/scrape: "true"
+      prometheus.io/path: "/metrics"
+      prometheus.io/port: "metrics"
+      prometheus.io/scheme: "http"
+      prometheus.io/interval: "15s"
+
+logging:
+  source: "kubernetes" # kubernetes, loki, elasticsearch, splunk
+  lokiSettings: {}
+    # host: "loki-gateway"
+    # port: "80"
+  elasticSearchSettings: {}
+    # host: "elasticsearch-master.efk.svc.cluster.local"
+    # port: "9200"
+    # apiKey: "elastic"
+    # indexPattern: "logstash-*"
+  splunkSettings: {}
+    # endpoint: "https://splunk-enterprise-standalone-service:8089"
+    # token: "" # Bearer token created in Splunk Settings -> Tokens
+    # indexName: "main"
+
+secretStore:
+    # Currently only Database, Kubernetes and HashiCorp Vault supported.
+    type: kubernetes # database, kubernetes, vault
+    vaultSettings: {}
+      # endpoint: "http://vault.vault.svc.cluster.local:8200"
+      # path: "/v1/secret/data/iomete/dev"
+      # token: "root"
+      # # if tokenSecret is set, the token will be read from the secret
+      # tokenSecret: {}
+      #   # name: secret-name
+      #   # key: token
+
+# truststore.jks file should include the default public certificates
+# in order to work with common public resources (e.g. Github, Maven, Google).
+# Do not create truststore.jks file with only self-signed certificates.
+# Copy Java's default truststore and add your custom certificates to it.
+javaTrustStore:
+  enabled: false
+  secretName: java-truststore # Name of the secret with the truststore.jks file
+  fileName: truststore.jks
+  password: changeit
+  mountPath: /etc/ssl/iomete-certs
+
+ingress:
+  httpsEnabled: true
+
+services:
+  sparkOperator:
+    resources: {}
+#    Uncomment below to use a custom resource configuration for the Spark Operator.
+#    Increase these values if handling over >100 Spark application submissions per minute.
+#    For such high-frequency submissions, set memory requests and limits around ~200Gi and CPU requests and limits to ~60-80 CPUs.
+#    resources:
+#      requests:
+#        memory: 16Gi
+#        cpu: 2
+#      limits:
+#        memory: 16Gi
+#        cpu: 16

@@ -1,0 +1,93 @@
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: minio-fs-pv
+  labels:
+    purpose: minio-fs
+spec:
+  storageClassName: manual
+  capacity:
+    storage: 1000Gi
+  accessModes:
+    - ReadWriteOnce
+  hostPath:
+    path: /mnt
+
+---
+## Create persistent volume claim for minio to store data.
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: minio-fs-pvc
+spec:
+  storageClassName: manual
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 1000Gi
+  selector:
+    matchLabels:
+      purpose: minio-fs
+---
+## Run minio fs deployment.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: minio
+spec:
+  selector:
+    matchLabels:
+      app: minio
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      labels:
+        app: minio
+    spec:
+      volumes:
+        - name: data
+          persistentVolumeClaim:
+            claimName: minio-fs-pvc
+      containers:
+        - name: minio
+          image: minio/minio
+          args:
+            - server
+            - /data
+            - --console-address
+            - ":9001"
+          env:
+            - name: MINIO_ROOT_USER
+              value: "admin"
+            - name: MINIO_ROOT_PASSWORD
+              value: "password"
+          volumeMounts:
+            - name: data
+              mountPath: "/data"
+          ports:
+            - name: s3-api
+              containerPort: 9000
+            - name: console
+              containerPort: 9001
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: minio
+spec:
+  type: NodePort
+  selector:
+    app: minio
+  ports:
+    - name: s3-api
+      nodePort: 31128 #range 30000-32767
+      port: 9000
+      protocol: TCP
+      targetPort: 9000
+    - name: console
+      nodePort: 31129 #range 30000-32767
+      port: 9001
+      protocol: TCP
+      targetPort: 9001

@@ -2,7 +2,7 @@
 
 - **Helm Repository:** https://chartmuseum.iomete.com
 - **Chart Name:** `iomete-data-plane-base`
-- **Latest Version:** `1.13.0`
+- **Latest Version:** `1.15.0`
 
 ## Quick Start
 
@@ -13,7 +13,7 @@ helm repo update
 
 # Deploy IOMETE Data Plane Base (to customize the installation see the Configuration section)
 helm upgrade --install -n iomete-system data-plane-base \
-  iomete/iomete-data-plane-base --version 1.11.0  
+  iomete/iomete-data-plane-base --version 1.15.0  
 ```
 
 Here is the readme file for the provided values file:

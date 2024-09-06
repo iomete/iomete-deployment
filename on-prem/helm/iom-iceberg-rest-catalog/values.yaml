@@ -1,0 +1,112 @@
+catalog:
+  name: catalog1
+  warehouse: s3://lakehouse/data
+  cacheEnabled: true
+  clients: 50
+  s3:
+    endpoint: http://minio:9000
+    region: us-east-1
+    pathStyleAccess: true
+    accessKeyId: minioadmin
+    secretAccessKey: minioadmin
+  jdbc:
+    uri: jdbc:postgresql://postgresql:5432/iomete_iceberg_db
+    useSSL: true
+    user: iomete_user
+    password: iomete_pass
+    passwordSecret: {}
+    # name: byo-db-creds
+    # key: db_password
+
+
+
+# Default values for iom-iceberg-rest-catalog.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+
+replicaCount: 1
+
+image:
+  repository: nginx
+  pullPolicy: IfNotPresent
+  # Overrides the image tag whose default is the chart appVersion.
+  tag: ""
+
+imagePullSecrets: []
+nameOverride: ""
+fullnameOverride: ""
+
+serviceAccount:
+  # Specifies whether a service account should be created
+  create: true
+  # Automatically mount a ServiceAccount's API credentials?
+  automount: true
+  # Annotations to add to the service account
+  annotations: {}
+  # The name of the service account to use.
+  # If not set and create is true, a name is generated using the fullname template
+  name: "lakehouse-service-account"
+
+podAnnotations: {}
+podLabels: {}
+
+podSecurityContext: {}
+  # fsGroup: 2000
+
+securityContext: {}
+  # capabilities:
+  #   drop:
+  #   - ALL
+  # readOnlyRootFilesystem: true
+  # runAsNonRoot: true
+  # runAsUser: 1000
+
+service:
+  type: ClusterIP
+  port: 80
+
+ingress:
+  enabled: false
+  className: ""
+  annotations: {}
+    # kubernetes.io/ingress.class: nginx
+    # kubernetes.io/tls-acme: "true"
+  hosts:
+    - host: chart-example.local
+      paths:
+        - path: /
+          pathType: ImplementationSpecific
+  tls: []
+  #  - secretName: chart-example-tls
+  #    hosts:
+  #      - chart-example.local
+
+docker:
+  repo: iomete
+  pullPolicy: Always
+  sparkVersion: 3.5.1-v3
+  imagePullSecrets: []
+
+# truststore.jks file should include the default public certificates
+# in order to work with common public resources (e.g. Github, Maven, Google).
+# Do not create truststore.jks file with only self-signed certificates.
+# Copy Java's default truststore and add your custom certificates to it.
+javaTrustStore:
+  enabled: false
+  secretName: java-truststore # Name of the secret with the truststore.jks file
+  fileName: truststore.jks
+  password: changeit
+  mountPath: /etc/ssl/iomete-certs
+
+# Set `true` if prometheus-stack is installed in the cluster
+# You can install it with a separate helm chart
+monitoring:
+  enabled: false
+  # This annotations will be added to the iom-core, iom-sql, iom-identity service when #monitoring.enabled is set to true
+  iomServices:
+    metricAnnotations:
+      prometheus.io/scrape: "true"
+      prometheus.io/path: "/q/metrics"
+      prometheus.io/port: "http"
+      prometheus.io/scheme: "http"
+      prometheus.io/interval: "15s"

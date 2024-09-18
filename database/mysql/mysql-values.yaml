@@ -1,0 +1,78 @@
+auth:
+  ## @param auth.rootPassword Password for the `root` user. Ignored if existing secret is provided
+  ## ref: https://github.com/bitnami/containers/tree/main/bitnami/mysql#setting-the-root-password-on-first-run
+  ##
+  rootPassword: "onXB8UbEqYzkQFgbXe8F#C5ckmyKix&"
+  ## @param auth.createDatabase Whether to create the .Values.auth.database or not
+  ## ref: https://github.com/bitnami/containers/tree/main/bitnami/mysql#creating-a-database-on-first-run
+  ##
+  createDatabase: false
+
+primary:
+  configuration: |-
+    [mysqld]
+    authentication_policy='{{- .Values.auth.authenticationPolicy | default "* ,," }}'
+    skip-name-resolve
+    explicit_defaults_for_timestamp
+    basedir=/opt/bitnami/mysql
+    plugin_dir=/opt/bitnami/mysql/lib/plugin
+    port={{ .Values.primary.containerPorts.mysql }}
+    mysqlx={{ ternary 1 0 .Values.primary.enableMySQLX }}
+    mysqlx_port={{ .Values.primary.containerPorts.mysqlx }}
+    socket=/opt/bitnami/mysql/tmp/mysql.sock
+    datadir=/bitnami/mysql/data
+    tmpdir=/opt/bitnami/mysql/tmp
+    max_allowed_packet=16M
+    bind-address=*
+    pid-file=/opt/bitnami/mysql/tmp/mysqld.pid
+    log-error=/opt/bitnami/mysql/logs/mysqld.log
+    character-set-server=UTF8
+    slow_query_log=0
+    long_query_time=10.0
+
+    [client]
+    port={{ .Values.primary.containerPorts.mysql }}
+    socket=/opt/bitnami/mysql/tmp/mysql.sock
+    default-character-set=UTF8
+    plugin_dir=/opt/bitnami/mysql/lib/plugin
+
+    [manager]
+    port={{ .Values.primary.containerPorts.mysql }}
+    socket=/opt/bitnami/mysql/tmp/mysql.sock
+    pid-file=/opt/bitnami/mysql/tmp/mysqld.pid
+
+  persistence:
+    ## @param primary.persistence.enabled Enable persistence on MySQL primary replicas using a `PersistentVolumeClaim`. If false, use emptyDir
+    ##
+    enabled: true
+    ## @param primary.persistence.existingClaim Name of an existing `PersistentVolumeClaim` for MySQL primary replicas
+    ## NOTE: When it's set the rest of persistence parameters are ignored
+    ##
+    existingClaim: ""
+    ## @param primary.persistence.subPath The name of a volume's sub path to mount for persistence
+    ##
+    subPath: ""
+    ## @param primary.persistence.storageClass MySQL primary persistent volume storage Class
+    ## If defined, storageClassName: <storageClass>
+    ## If set to "-", storageClassName: "", which disables dynamic provisioning
+    ## If undefined (the default) or set to null, no storageClassName spec is
+    ##   set, choosing the default provisioner.  (gp2 on AWS, standard on
+    ##   GKE, AWS & OpenStack)
+    ##
+    storageClass: ""
+    ## @param primary.persistence.annotations MySQL primary persistent volume claim annotations
+    ##
+    annotations: {}
+    ## @param primary.persistence.accessModes MySQL primary persistent volume access Modes
+    ##
+    accessModes:
+      - ReadWriteOnce
+    ## @param primary.persistence.size MySQL primary persistent volume size
+    ##
+    size: 50Gi
+    ## @param primary.persistence.selector Selector to match an existing Persistent Volume
+    ## selector:
+    ##   matchLabels:
+    ##     app: my-app
+    ##
+    selector: {}

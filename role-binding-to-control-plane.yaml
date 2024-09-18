@@ -1,7 +1,7 @@
 kind: RoleBinding
 apiVersion: rbac.authorization.k8s.io/v1
 metadata:
-  name: iomete-role-binding-to-{{system-namespace}}
+  name: iomete-role-binding-to-{{control-plane-namespace}}
 roleRef:
   kind: Role
   name: iomete-lakehouse-role
@@ -9,4 +9,4 @@ roleRef:
 subjects:
   - kind: ServiceAccount
     name: lakehouse-service-account
-    namespace: {{system-namespace}}
+    namespace: {{control-plane-namespace}}

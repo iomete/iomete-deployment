@@ -1,0 +1,34 @@
+apiVersion: admissionregistration.k8s.io/v1
+kind: MutatingWebhookConfiguration
+metadata:
+  name: spark-operator-{{namespace}}
+webhooks:
+  - name: webhook.sparkoperator.k8s.io
+    clientConfig:
+      service:
+        namespace: {{namespace}}
+        name: spark-operator-webhook
+        path: /webhook
+        port: 443
+      caBundle: {{caBundle}}
+    rules:
+      - operations:
+          - CREATE
+        apiGroups:
+          - ""
+        apiVersions:
+          - v1
+        resources:
+          - pods
+        scope: "Namespaced"
+    failurePolicy: Ignore
+    matchPolicy: Equivalent
+    namespaceSelector:
+      matchLabels:
+        kubernetes.io/metadata.name: {{namespace}}
+    objectSelector: {}
+    sideEffects: NoneOnDryRun
+    timeoutSeconds: 30
+    admissionReviewVersions:
+      - v1
+    reinvocationPolicy: Never

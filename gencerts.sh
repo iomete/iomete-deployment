@@ -97,6 +97,9 @@ SERVICE="spark-webhook"
 NAMESPACE="spark-operator"
 parse_arguments "$@"
 
+URL="https://raw.githubusercontent.com/iomete/iomete-deployment/main/spark-operator-webhook-template.yaml"
+OUTPUT_FILE="spark-operator-webhook.yaml"
+
 TMP_DIR="/tmp/spark-pod-webhook-certs"
 
 echo "Generating certs for the Spark pod admission webhook in ${TMP_DIR}."
@@ -180,3 +183,25 @@ fi
 # Clean up after we're done.
 printf "\nDeleting ${TMP_DIR}.\n"
 rm -rf ${TMP_DIR}
+
+
+# Create Webhook YAML for deployment
+
+
+# Fetch the caBundle from the Kubernetes secret (base64 decoded)
+caBundle=$(kubectl get secret/$RESOURCE_NAME -n $NAMESPACE --template='{{ index .data "ca-cert.pem" }}')
+
+# Download the YAML file
+wget -O $OUTPUT_FILE $URL
+
+# Detect if GNU sed or BSD sed is used
+if sed --version >/dev/null 2>&1; then
+    # GNU sed (Linux)
+    sed -i -e "s/{{caBundle}}/$caBundle/g" -e "s/{{namespace}}/$NAMESPACE/g" $OUTPUT_FILE
+else
+    # BSD sed (macOS or others)
+    sed -i '' -e "s/{{caBundle}}/$caBundle/g" -e "s/{{namespace}}/$NAMESPACE/g" $OUTPUT_FILE
+fi
+
+# Output the result
+echo "YAML file has been generated: $OUTPUT_FILE"

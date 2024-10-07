@@ -28,25 +28,14 @@ database:
     # password: "password"
     # # if passwordSecret is set, the password will be read from the secret
     # passwordSecret: {}
-    #   # name: byo-db-creds
-    #   # key: password
+    ## name: byo-db-creds
+    ## key: password
   ssl:
     enabled: false # Enabling this will require javaTrustStore to be enabled and configured properly
     mode: "disable" # disable, verify-full
 
 spark:
   logLevel: info
-
-keycloak:
-  enabled: true
-  adminUser: "kc_admin"
-  adminPassword: "Admin_123"
-  # if adminPasswordSecret is set, the password will be read from the secret
-  adminPasswordSecret: {}
-    # name: secret-name
-    # key: password
-  # Change this if enabled is set to false, or controlPlane is enabled
-  endpoint: "http://keycloak-http/auth"
 
 storage:
   bucketName: "lakehouse"
@@ -59,18 +48,19 @@ storage:
     # secretKey: "password"
     # # if secretKeySecret is set, the secretKey will be read from the secret
     # secretKeySecret: {}
-    #   # name: secret-name
-    #   # key: secret-key
+    ## name: secret-name
+    ## key: secret-key
   azureSettings: {}
     # storageAccountName: ""
     # storageAccountKey: ""
 
 clusterDomain: cluster.local
+dnsResolver: "kube-dns.kube-system.svc.cluster.local"
 
 docker:
   repo: iomete
   pullPolicy: Always
-  sparkVersion: 3.5.1-v2
+  sparkVersion: 3.5.1-v5
   imagePullSecrets: []
   # - name: your-image-pull-secret
 
@@ -80,12 +70,6 @@ dataCatalog:
   storageSize: 1Gi
   # This enables the PII detection feature in the data catalog. It will also install the Presidio Docker image.
   piiDetection: false
-
-# Data Security Module
-ranger:
-  enabled: true
-  audit:
-    enabled: false
 
 jupyterGateway:
   kernels:
@@ -120,8 +104,7 @@ logging:
     # host: "loki-gateway"
     # port: "80"
   elasticSearchSettings: {}
-    # host: "elasticsearch-master.efk.svc.cluster.local"
-    # port: "9200"
+    # endpoint: "https://elasticsearch-master.efk.svc.cluster.local:9200"
     # apiKey: "elastic"
     # indexPattern: "logstash-*"
   splunkSettings: {}
@@ -168,3 +151,10 @@ services:
 #      limits:
 #        memory: 16Gi
 #        cpu: 16
+
+# Multi-Namespace Support: Spark resources can now be deployed to separate namespaces,
+# allowing teams to manage their own CPU and memory resources independently.
+# The data plane's namespace is automatically managed and doesn't need to be specified.
+namespaces: []
+  # - namespace1
+  # - namespace2

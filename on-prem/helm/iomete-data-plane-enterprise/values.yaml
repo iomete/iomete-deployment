@@ -60,7 +60,7 @@ dnsResolver: "kube-dns.kube-system.svc.cluster.local"
 docker:
   repo: iomete
   pullPolicy: Always
-  sparkVersion: 3.5.1-v5
+  sparkVersion: 3.5.1-v6
   imagePullSecrets: []
   # - name: your-image-pull-secret
 

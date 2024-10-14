@@ -2,7 +2,7 @@
 
 - **Helm Repository:** https://chartmuseum.iomete.com
 - **Chart Name:** `iomete-data-plane-enterprise`
-- **Latest Version:** `2.0.0`
+- **Latest Version:** `2.0.1`
 
 ## Quick Start
 
@@ -13,7 +13,7 @@ helm repo update
 
 # Deploy IOMETE Data Plane (to customize the installation see the Configuration section)
 helm upgrade --install -n iomete-system iomete-data-plane \
-  iomete/iomete-data-plane-enterprise --version 2.0.0
+  iomete/iomete-data-plane-enterprise --version 2.0.1
 ```
 
 ## Configuration
@@ -21,7 +21,7 @@ helm upgrade --install -n iomete-system iomete-data-plane \
 ### 1. General Configuration
 
 | Name | Description                         | Default Value    | Available from Version |
-|------|-------------------------------------|------------------|------------------------|
+| ---- | ----------------------------------- | ---------------- | ---------------------- |
 | name | The unique name for the data plane. | iomete-community | 1.9.2                  |
 
 ### 2. Admin User
@@ -32,7 +32,7 @@ first name, last name, email, and temporary password. The `username` and `tempor
 login.
 
 | Name                        | Description                                  | Default Value     | Available from Version |
-|-----------------------------|----------------------------------------------|-------------------|------------------------|
+| --------------------------- | -------------------------------------------- | ----------------- | ---------------------- |
 | adminUser.username          | Username for the data plane admin user.      | admin             | 1.9.2                  |
 | adminUser.email             | Email address for the data plane admin user. | admin@example.com | 1.9.2                  |
 | adminUser.firstName         | First name of the admin user.                | Admin             | 1.9.2                  |
@@ -45,7 +45,7 @@ This section contains the configuration for the database used by the IOMETE Data
 PostgreSQL database, but you can adjust them to match your database configuration.
 
 | Name                                                 | Description                                                                                                           | Default Value | Available from Version |
-|------------------------------------------------------|-----------------------------------------------------------------------------------------------------------------------|---------------|------------------------|
+| ---------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------- | ------------- | ---------------------- |
 | database.type                                        | Type of the database supported.                                                                                       | postgresql    | 1.9.2                  |
 | database.host                                        | Hostname for the database.                                                                                            | postgresql    | 1.9.2                  |
 | database.port                                        | Port on which the database server is listening.                                                                       | 5432          | 1.9.2                  |
@@ -62,7 +62,7 @@ When this section is provided, IOMETE will create all the necessary databases an
 Remove this section if you want to handle the database setup manually.
 
 | Name                                     | Description                                                                                                                 | Default Value | Available from Version |
-|------------------------------------------|-----------------------------------------------------------------------------------------------------------------------------|---------------|------------------------|
+| ---------------------------------------- | --------------------------------------------------------------------------------------------------------------------------- | ------------- | ---------------------- |
 | database.adminCredentials.user           | A database user which has rights to create databases, users, and grant privileges.                                          | postgres      | 1.9.2                  |
 | database.adminCredentials.password       | Password for the database admin user.                                                                                       |               | 1.9.2                  |
 | database.adminCredentials.passwordSecret | Name of the Kubernetes secret containing the database admin password. If this is set, the `password` field will be ignored. |               | 1.9.2                  |
@@ -70,7 +70,7 @@ Remove this section if you want to handle the database setup manually.
 ### 4. Spark Configuration
 
 | Name           | Description                               | Default Value | Available from Version |
-|----------------|-------------------------------------------|---------------|------------------------|
+| -------------- | ----------------------------------------- | ------------- | ---------------------- |
 | spark.logLevel | Default log level for Spark applications. | warn          | 1.9.2                  |
 
 ### 5. Storage Configuration
@@ -78,7 +78,7 @@ Remove this section if you want to handle the database setup manually.
 Configure the storage backend for the IOMETE Data Plane.
 
 | Name                                                  | Description                                                                | Default Value | Available from Version |
-|-------------------------------------------------------|----------------------------------------------------------------------------|---------------|------------------------|
+| ----------------------------------------------------- | -------------------------------------------------------------------------- | ------------- | ---------------------- |
 | storage.bucketName                                    | Name of the bucket to be used.                                             | lakehouse     | 1.9.2                  |
 | storage.type                                          | Type of storage backend. Options: minio, dell_ecs, aws_s3, gcs, azure_gen1 | minio         | 1.9.2                  |
 | [storage.dellEcsSettings](#dell-ecs-storage-settings) | Settings for Dell ECS storage.                                             | {}            | 1.9.2                  |
@@ -87,9 +87,9 @@ Configure the storage backend for the IOMETE Data Plane.
 ### 6. Cluster and Docker Configuration
 
 | Name                                                  | Description                                                                                              | Default Value                          | Available from Version |
-|-------------------------------------------------------|----------------------------------------------------------------------------------------------------------|----------------------------------------|------------------------|
+| ----------------------------------------------------- | -------------------------------------------------------------------------------------------------------- | -------------------------------------- | ---------------------- |
 | clusterDomain                                         | Kubernetes cluster domain.                                                                               | cluster.local                          | 1.9.2                  |
-| dnsResolver                                           | Kubernetes DNS resolver                                                                                  | kube-dns.kube-system.svc.cluster.local | 2.0.0                  
+| dnsResolver                                           | Kubernetes DNS resolver                                                                                  | kube-dns.kube-system.svc.cluster.local | 2.0.0                  |
 | docker.repo                                           | Docker repository for pulling images. If you want to use a custom repository, you can change this value. | iomete                                 | 1.9.2                  |
 | docker.sparkVersion                                   | Spark version for the Docker image.                                                                      | 3.5.1-v5                               | 1.9.2                  |
 | docker.pullPolicy                                     | Pull policy for Docker images.                                                                           | Always                                 | 1.9.2                  |
@@ -100,13 +100,13 @@ Configure the storage backend for the IOMETE Data Plane.
 Jupyter Gateway is a service that provides a remote Jupyter notebook kernel for Spark and Scala.
 
 | Name                   | Description                                   | Default Value                      | Available from Version |
-|------------------------|-----------------------------------------------|------------------------------------|------------------------|
+| ---------------------- | --------------------------------------------- | ---------------------------------- | ---------------------- |
 | jupyterGateway.kernels | List of kernels available in Jupyter Gateway. | pyspark_kernel, spark_scala_kernel | 1.9.2                  |
 
 ### 8. Data Catalog Configuration
 
 | Name                     | Description                                                                                                 | Default Value | Available from Version |
-|--------------------------|-------------------------------------------------------------------------------------------------------------|---------------|------------------------|
+| ------------------------ | ----------------------------------------------------------------------------------------------------------- | ------------- | ---------------------- |
 | dataCatalog.enabled      | Enable or disable the data catalog feature.                                                                 | true          | 1.9.2                  |
 | dataCatalog.storageSize  | Allocated memory for Typesense search engine storage                                                        | 1Gi           | 1.9.2                  |
 | dataCatalog.piiDetection | This enables the PII detection feature in the data catalog. It will also install the Presidio Docker image. | false         | 1.11.0                 |
@@ -116,13 +116,13 @@ Jupyter Gateway is a service that provides a remote Jupyter notebook kernel for 
 Set `true` if Prometheus stack is installed in the cluster. You can install it with a separate Helm chart.
 
 | Name               | Description                   | Default Value | Available from Version |
-|--------------------|-------------------------------|---------------|------------------------|
+| ------------------ | ----------------------------- | ------------- | ---------------------- |
 | monitoring.enabled | Enable or disable monitoring. | false         | 1.15.0                 |
 
 ### 10. Logging Configuration
 
 | Name                                                    | Description                                                  | Default Value                     | Available from Version |
-|---------------------------------------------------------|--------------------------------------------------------------|-----------------------------------|------------------------|
+| ------------------------------------------------------- | ------------------------------------------------------------ | --------------------------------- | ---------------------- |
 | logging.source                                          | Source for logging. Options: kubernetes, loki, elasticsearch | [kubernetes](#kubernetes-logging) | 1.10.0                 |
 | [logging.lokiSettings](#loki-logging)                   | Settings for Loki logging backend.                           | {}                                | 1.10.0                 |
 | [logging.elasticSearchSettings](#elasticsearch-logging) | Settings for Elasticsearch logging backend.                  | {}                                | 1.10.0                 |
@@ -137,7 +137,7 @@ resources (e.g. Github, Maven, Google). Do not create truststore.jks file with o
 Java's default truststore and add your custom certificates to it.
 
 | Name                      | Description                                                       | Default Value         | Available from Version |
-|---------------------------|-------------------------------------------------------------------|-----------------------|------------------------|
+| ------------------------- | ----------------------------------------------------------------- | --------------------- | ---------------------- |
 | javaTrustStore.enabled    | Enable Java TrustStore for handling self-signed certificates.     | false                 | 1.9.2                  |
 | javaTrustStore.secretName | Name of the Kubernetes secret containing the truststore.jks file. | java-truststore       | 1.9.2                  |
 | javaTrustStore.fileName   | Name of the truststore file.                                      | truststore.jks        | 1.9.2                  |
@@ -149,7 +149,7 @@ Java's default truststore and add your custom certificates to it.
 IOMETE Data Plane needs to know if the ingress is enabled and if HTTPS is enabled.
 
 | Name                 | Description                   | Default Value | Available from Version |
-|----------------------|-------------------------------|---------------|------------------------|
+| -------------------- | ----------------------------- | ------------- | ---------------------- |
 | ingress.httpsEnabled | Enable HTTPS for the ingress. | true          | 1.9.2                  |
 
 ## Advanced Configuration Examples
@@ -256,7 +256,7 @@ logging:
 #### Spark Operator
 
 | Name                                     | Description                               | Default Value |
-|------------------------------------------|-------------------------------------------|---------------|
+| ---------------------------------------- | ----------------------------------------- | ------------- |
 | services.sparkOperator.metricAnnotations | Annotations for Spark Operator metrics    | See below     |
 | services.sparkOperator.resources         | Resource configuration for Spark Operator | {}            |
 

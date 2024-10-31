@@ -60,7 +60,7 @@ dnsResolver: "kube-dns.kube-system.svc.cluster.local"
 docker:
   repo: iomete
   pullPolicy: Always
-  sparkVersion: 3.5.1-v6
+  sparkVersion: 3.5.3
   imagePullSecrets: []
   # - name: your-image-pull-secret
 
@@ -139,6 +139,12 @@ ingress:
   httpsEnabled: true
 
 services:
+  gateway:
+    replicas: 1
+  
+  restCatalog:
+    replicas: 1
+  
   sparkOperator:
     resources: {}
 #    Uncomment below to use a custom resource configuration for the Spark Operator.
@@ -158,3 +164,11 @@ services:
 namespaces: []
   # - namespace1
   # - namespace2
+
+controlPlaneNodeSelector: {}
+#  node-role.kubernetes.io/control-plane: ""
+
+controlPlaneTolerations: []
+#  - key: "node-role.kubernetes.io/control-plane"
+#    operator: "Exists"
+#    effect: "NoSchedule"

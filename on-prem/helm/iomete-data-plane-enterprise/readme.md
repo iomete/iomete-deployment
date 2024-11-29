@@ -2,7 +2,7 @@
 
 - **Helm Repository:** https://chartmuseum.iomete.com
 - **Chart Name:** `iomete-data-plane-enterprise`
-- **Latest Version:** `2.1.0`
+- **ArtifactHUB URL:** https://artifacthub.io/packages/helm/iomete/iomete-data-plane-enterprise
 
 ## Quick Start
 
@@ -13,144 +13,13 @@ helm repo update
 
 # Deploy IOMETE Data Plane (to customize the installation see the Configuration section)
 helm upgrade --install -n iomete-system iomete-data-plane \
-  iomete/iomete-data-plane-enterprise --version 2.1.0
+  iomete/iomete-data-plane-enterprise --version {VERSION}
 ```
 
 ## Configuration
 
-### 1. General Configuration
+For more information about the available configurations, visit the [IOMETE Data Plane Enterprise](https://artifacthub.io/packages/helm/iomete/iomete-data-plane-enterprise) page on ArtifactHUB.  
 
-| Name | Description                         | Default Value    | Available from Version |
-| ---- | ----------------------------------- | ---------------- | ---------------------- |
-| name | The unique name for the data plane. | iomete-community | 1.9.2                  |
-
-### 2. Admin User
-
-This is the user that will be created for the data plane admin. Additional users can be created later through the IOMETE
-Data Plane UI. In most cases, the default values for the admin user are sufficient. If you need, you can change the
-first name, last name, email, and temporary password. The `username` and `temporaryPassword` will be used for the first
-login.
-
-| Name                        | Description                                  | Default Value     | Available from Version |
-| --------------------------- | -------------------------------------------- | ----------------- | ---------------------- |
-| adminUser.username          | Username for the data plane admin user.      | admin             | 1.9.2                  |
-| adminUser.email             | Email address for the data plane admin user. | admin@example.com | 1.9.2                  |
-| adminUser.firstName         | First name of the admin user.                | Admin             | 1.9.2                  |
-| adminUser.lastName          | Last name of the admin user.                 | Admin             | 1.9.2                  |
-| adminUser.temporaryPassword | Temporary password for first login.          | admin             | 1.9.2                  |
-
-### 3. Database Configuration
-
-This section contains the configuration for the database used by the IOMETE Data Plane. The default values are set for a
-PostgreSQL database, but you can adjust them to match your database configuration.
-
-| Name                                                 | Description                                                                                                           | Default Value | Available from Version |
-| ---------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------- | ------------- | ---------------------- |
-| database.type                                        | Type of the database supported.                                                                                       | postgresql    | 1.9.2                  |
-| database.host                                        | Hostname for the database.                                                                                            | postgresql    | 1.9.2                  |
-| database.port                                        | Port on which the database server is listening.                                                                       | 5432          | 1.9.2                  |
-| database.user                                        | Username to connect to the database.                                                                                  | iomete_user   | 1.9.2                  |
-| database.password                                    | Password to connect to the database.                                                                                  | iomete_pass   | 1.9.2                  |
-| [database.passwordSecret](#database-password-secret) | Name of the Kubernetes secret containing the database password. If this is set, the `password` field will be ignored. |               | 1.9.2                  |
-| database.prefix                                      | Prefix to be added to all IOMETE databases. This is useful when multiple IOMETE instances share the same database.    | iomete_       | 1.9.2                  |
-| database.ssl.enabled                                 | Enable SSL for database connections.                                                                                  | false         | 1.9.2                  |
-| database.ssl.mode                                    | SSL mode for database connections.                                                                                    | disable       | 1.9.2                  |
-
-#### Database Admin Credentials
-
-When this section is provided, IOMETE will create all the necessary databases and users for the IOMETE Data Plane.
-Remove this section if you want to handle the database setup manually.
-
-| Name                                     | Description                                                                                                                 | Default Value | Available from Version |
-| ---------------------------------------- | --------------------------------------------------------------------------------------------------------------------------- | ------------- | ---------------------- |
-| database.adminCredentials.user           | A database user which has rights to create databases, users, and grant privileges.                                          | postgres      | 1.9.2                  |
-| database.adminCredentials.password       | Password for the database admin user.                                                                                       |               | 1.9.2                  |
-| database.adminCredentials.passwordSecret | Name of the Kubernetes secret containing the database admin password. If this is set, the `password` field will be ignored. |               | 1.9.2                  |
-
-### 4. Spark Configuration
-
-| Name           | Description                               | Default Value | Available from Version |
-| -------------- | ----------------------------------------- | ------------- | ---------------------- |
-| spark.logLevel | Default log level for Spark applications. | warn          | 1.9.2                  |
-
-### 5. Storage Configuration
-
-Configure the storage backend for the IOMETE Data Plane.
-
-| Name                                                  | Description                                                                | Default Value | Available from Version |
-| ----------------------------------------------------- | -------------------------------------------------------------------------- | ------------- | ---------------------- |
-| storage.bucketName                                    | Name of the bucket to be used.                                             | lakehouse     | 1.9.2                  |
-| storage.type                                          | Type of storage backend. Options: minio, dell_ecs, aws_s3, gcs, azure_gen1 | minio         | 1.9.2                  |
-| [storage.dellEcsSettings](#dell-ecs-storage-settings) | Settings for Dell ECS storage.                                             | {}            | 1.9.2                  |
-| [storage.minioSettings](#minio-storage-settings)      | Settings for MinIO storage.                                                | {}            | 1.9.2                  |
-
-### 6. Cluster and Docker Configuration
-
-| Name                                                  | Description                                                                                              | Default Value                          | Available from Version |
-| ----------------------------------------------------- | -------------------------------------------------------------------------------------------------------- | -------------------------------------- | ---------------------- |
-| clusterDomain                                         | Kubernetes cluster domain.                                                                               | cluster.local                          | 1.9.2                  |
-| dnsResolver                                           | Kubernetes DNS resolver                                                                                  | kube-dns.kube-system.svc.cluster.local | 2.0.0                  |
-| docker.repo                                           | Docker repository for pulling images. If you want to use a custom repository, you can change this value. | iomete                                 | 1.9.2                  |
-| docker.sparkVersion                                   | Spark version for the Docker image.                                                                      | 3.5.1-v5                               | 1.9.2                  |
-| docker.pullPolicy                                     | Pull policy for Docker images.                                                                           | Always                                 | 1.9.2                  |
-| [docker.imagePullSecrets](#docker-image-pull-secrets) | Image pull secrets for Docker images.                                                                    | []                                     | 1.9.2                  |
-
-### 7. Jupyter Gateway Configuration
-
-Jupyter Gateway is a service that provides a remote Jupyter notebook kernel for Spark and Scala.
-
-| Name                   | Description                                   | Default Value                      | Available from Version |
-| ---------------------- | --------------------------------------------- | ---------------------------------- | ---------------------- |
-| jupyterGateway.kernels | List of kernels available in Jupyter Gateway. | pyspark_kernel, spark_scala_kernel | 1.9.2                  |
-
-### 8. Data Catalog Configuration
-
-| Name                     | Description                                                                                                 | Default Value | Available from Version |
-| ------------------------ | ----------------------------------------------------------------------------------------------------------- | ------------- | ---------------------- |
-| dataCatalog.enabled      | Enable or disable the data catalog feature.                                                                 | true          | 1.9.2                  |
-| dataCatalog.storageSize  | Allocated memory for Typesense search engine storage                                                        | 1Gi           | 1.9.2                  |
-| dataCatalog.piiDetection | This enables the PII detection feature in the data catalog. It will also install the Presidio Docker image. | false         | 1.11.0                 |
-
-### 9. Monitoring Configuration
-
-Set `true` if Prometheus stack is installed in the cluster. You can install it with a separate Helm chart.
-
-| Name               | Description                   | Default Value | Available from Version |
-| ------------------ | ----------------------------- | ------------- | ---------------------- |
-| monitoring.enabled | Enable or disable monitoring. | false         | 1.15.0                 |
-
-### 10. Logging Configuration
-
-| Name                                                    | Description                                                  | Default Value                     | Available from Version |
-| ------------------------------------------------------- | ------------------------------------------------------------ | --------------------------------- | ---------------------- |
-| logging.source                                          | Source for logging. Options: kubernetes, loki, elasticsearch | [kubernetes](#kubernetes-logging) | 1.10.0                 |
-| [logging.lokiSettings](#loki-logging)                   | Settings for Loki logging backend.                           | {}                                | 1.10.0                 |
-| [logging.elasticSearchSettings](#elasticsearch-logging) | Settings for Elasticsearch logging backend.                  | {}                                | 1.10.0                 |
-| [logging.splunkSettings](#splunk-logging)               | Settings for Splunk logging backend.                         | {}                                | 1.15.0                 |
-
-### 11. Java TrustStore Configuration
-
-If you need to talk to services with self-signed certificates, you can enable the Java TrustStore and provide the
-truststore file.
-P.S. `truststore.jks` file should include the default public certificates in order to work with common public
-resources (e.g. Github, Maven, Google). Do not create truststore.jks file with only self-signed certificates. Copy
-Java's default truststore and add your custom certificates to it.
-
-| Name                      | Description                                                       | Default Value         | Available from Version |
-| ------------------------- | ----------------------------------------------------------------- | --------------------- | ---------------------- |
-| javaTrustStore.enabled    | Enable Java TrustStore for handling self-signed certificates.     | false                 | 1.9.2                  |
-| javaTrustStore.secretName | Name of the Kubernetes secret containing the truststore.jks file. | java-truststore       | 1.9.2                  |
-| javaTrustStore.fileName   | Name of the truststore file.                                      | truststore.jks        | 1.9.2                  |
-| javaTrustStore.password   | Password for the truststore.                                      | changeit              | 1.9.2                  |
-| javaTrustStore.mountPath  | Mount path for the truststore file in the container.              | /etc/ssl/iomete-certs | 1.9.2                  |
-
-### 12. Ingress Configuration
-
-IOMETE Data Plane needs to know if the ingress is enabled and if HTTPS is enabled.
-
-| Name                 | Description                   | Default Value | Available from Version |
-| -------------------- | ----------------------------- | ------------- | ---------------------- |
-| ingress.httpsEnabled | Enable HTTPS for the ingress. | true          | 1.9.2                  |
 
 ## Advanced Configuration Examples
 

@@ -1,22 +1,22 @@
 output "host" {
   description = "The FQDN of the PostgreSQL Flexible Server"
-  value = azurerm_postgresql_flexible_server.postgres.fqdn
+  value       = azurerm_postgresql_flexible_server.postgres.fqdn
 }
 
 output "port" {
   description = "The port on which to connect to the PostgreSQL Server"
-  value = local.port
+  value       = local.port
 }
 
 output "administrator_username" {
   description = "The username for the PostgreSQL administrator account"
-  value = azurerm_postgresql_flexible_server.postgres.administrator_login
+  value       = azurerm_postgresql_flexible_server.postgres.administrator_login
 }
 
 output "administrator_password" {
   description = "The password for the PostgreSQL administrator account"
-  value = azurerm_postgresql_flexible_server.postgres.administrator_password
-  sensitive = true
+  value       = azurerm_postgresql_flexible_server.postgres.administrator_password
+  sensitive   = true
 }
 
 output "firewall_ip_range" {

@@ -7,7 +7,7 @@ locals {
   postgresql_vm_size = "B_Standard_B1ms"
 
   # chart versions to install
-  iomete_dataplane_enterprise_chart_version = "3.8.1"
+  iomete_dataplane_enterprise_chart_version = "3.10.2"
   iomete_monitoring_chart_version           = "2.2.0"
 
   # additional tags that can be used for tracking/tagging/attribution/etc
@@ -77,9 +77,57 @@ module "minio" {
   namespace                      = module.kubernetes_infra_namespace.namespace_name
 }
 
+module "strimzi_kafka_operator" {
+  count = var.enable_kafka ? 1 : 0
+
+  source = "./modules/kubernetes/helm-charts/strimzi-kafka-operator"
+
+  namespace = module.kubernetes_infra_namespace.namespace_name
+}
+
+module "kafka_cluster" {
+  count = var.enable_kafka ? 1 : 0
+
+  source = "./modules/kubernetes/kafka-cluster"
+
+  namespace           = module.kubernetes_infra_namespace.namespace_name
+  cluster_name        = "test-kafka"
+  kafka_replicas      = 1
+  kafka_version       = "4.0.0"
+  operator_dependency = var.enable_kafka ? module.strimzi_kafka_operator[0] : null
+
+  depends_on = [module.strimzi_kafka_operator]
+}
+
+module "kafka_ui" {
+  count = var.enable_kafka ? 1 : 0
+
+  source = "./modules/kubernetes/kafka-ui"
+
+  namespace               = module.kubernetes_infra_namespace.namespace_name
+  cluster_name            = "test-kafka"
+  kafka_bootstrap_servers = var.enable_kafka ? module.kafka_cluster[0].kafka_bootstrap_servers.plain : ""
+
+  depends_on = [module.kafka_cluster]
+}
+
+module "kafka_data_producer" {
+  count = var.enable_kafka ? 1 : 0
+
+  source = "./modules/kubernetes/kafka-data-producer"
+
+  namespace                = module.kubernetes_infra_namespace.namespace_name
+  kafka_bootstrap_servers  = var.enable_kafka ? module.kafka_cluster[0].kafka_bootstrap_servers.plain : ""
+  topic_name               = "events"
+  data_type                = var.kafka_data_type
+  message_interval_seconds = 5
+
+  depends_on = [module.kafka_cluster]
+}
+
 module "iomete_control_plane_namespace" {
   depends_on = [module.kubernetes_cluster]
-  source = "./modules/kubernetes/namespace"
+  source     = "./modules/kubernetes/namespace"
 
   namespace = "iomete-system"
   labels = {
@@ -102,7 +150,7 @@ module "dataplane-enterprise" {
   # minio connection details
   minio_uri      = module.minio.api_endpoint
   minio_username = module.minio.root_user
-  minio_secret = module.minio.root_password
+  minio_secret   = module.minio.root_password
 
   # postgresql connection details
   postgresql_host           = module.postgresql_server.host
@@ -120,7 +168,7 @@ module "monitoring" {
 
   # install monitoring in control-plane as well
   control_plane_namespace = module.iomete_control_plane_namespace.namespace_name
-  monitoring_namespace = module.iomete_control_plane_namespace.namespace_name
+  monitoring_namespace    = module.iomete_control_plane_namespace.namespace_name
 
   # postgresql connection details
   postgresql_host     = module.postgresql_server.host

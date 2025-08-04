@@ -12,7 +12,7 @@ resource "tls_self_signed_cert" "ca_cert" {
     organization = "minio"
   }
 
-  validity_period_hours = 8760  # 1 year
+  validity_period_hours = 8760 # 1 year
   allowed_uses = [
     "digital_signature",
     "cert_signing",
@@ -47,7 +47,7 @@ resource "tls_locally_signed_cert" "minio_cert" {
   ca_private_key_pem = tls_private_key.ca_key.private_key_pem
   ca_cert_pem        = tls_self_signed_cert.ca_cert.cert_pem
 
-  validity_period_hours = 8760  # 1 year
+  validity_period_hours = 8760 # 1 year
 
   allowed_uses = [
     "key_encipherment",

@@ -22,51 +22,51 @@ variable "iomete_chart_museum_url" {
 
 variable "postgresql_host" {
   description = "The postgresql hostname for IOMETE-system"
-  type = string
+  type        = string
 }
 
 variable "postgresql_port" {
   description = "The postgresql port to connect to"
-  type = number
+  type        = number
 }
 
 variable "postgresql_admin_user" {
   description = "The postgresql admin username"
-  type = string
+  type        = string
 }
 
 variable "postgresql_admin_password" {
   description = "The postgresql admin username"
-  type = string
+  type        = string
 }
 
 variable "postgresql_user" {
   description = "The username for the postgresql user iomete components will use"
-  type = string
+  type        = string
 }
 
 variable "postgresql_password" {
   description = "The password for the postgresql user iomete components will use"
-  type = string
+  type        = string
 }
 
 variable "minio_uri" {
   description = "Minio URI to connect to for the lakehouse"
-  type = string
+  type        = string
 }
 
 variable "minio_username" {
   description = "Username to use when connecting to Minio"
-  type = string
+  type        = string
 }
 
 variable "minio_secret" {
   description = "Password to use when connecting to Minio"
-  type = string
+  type        = string
 }
 
 variable "certificates" {
   description = "(Optional) list of certificates that will be placed in a truststore and used by the IOMETE services"
-  type = set(string)
-  default = []
+  type        = set(string)
+  default     = []
 }

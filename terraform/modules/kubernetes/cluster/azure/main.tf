@@ -6,13 +6,13 @@ resource "azurerm_kubernetes_cluster" "aks" {
   kubernetes_version  = var.kubernetes_version
 
   default_node_pool {
-    name                = "default"
-    vm_size             = var.vm_size
+    name                 = "default"
+    vm_size              = var.vm_size
     auto_scaling_enabled = true
-    min_count           = var.min_number_of_nodes
-    max_count           = var.max_number_of_nodes
-    max_pods            = var.max_number_of_pods
-    os_disk_size_gb     = 512
+    min_count            = var.min_number_of_nodes
+    max_count            = var.max_number_of_nodes
+    max_pods             = var.max_number_of_pods
+    os_disk_size_gb      = 512
     upgrade_settings {
       # these are Azure default. Added these since without them Terraform module thinks the state is inconsistent
       # and keeps changing them between the defaults and null

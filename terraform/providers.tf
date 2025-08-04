@@ -1,21 +1,25 @@
 terraform {
   backend "azurerm" {
     # settings to store terraform state in azure
-    resource_group_name  = var.terraform_state_resource_group_name
-    storage_account_name = var.terraform_state_storage_account_name
-    container_name       = var.terraform_state_container_name
-    key                  = var.terraform_state_key
+    resource_group_name  = "terraform-state-rg"
+    storage_account_name = "iomete"
+    container_name       = "tfstate"
+    key                  = "iomete/kubernetes.tfstate"
   }
 
   required_providers {
     azurerm = {
-      source  = "hashicorp/azurerm"
+      source = "hashicorp/azurerm"
     }
     kubernetes = {
       source = "hashicorp/kubernetes"
     }
     helm = {
-      source  = "hashicorp/helm"
+      source = "hashicorp/helm"
+    }
+    kubectl = {
+      source  = "gavinbunney/kubectl"
+      version = ">= 1.14.0"
     }
   }
 }
@@ -40,4 +44,12 @@ provider "helm" {
     client_key             = module.kubernetes_cluster.client_key
     cluster_ca_certificate = module.kubernetes_cluster.cluster_ca_cert
   }
+}
+
+provider "kubectl" {
+  host                   = module.kubernetes_cluster.host
+  client_certificate     = module.kubernetes_cluster.client_cert
+  client_key             = module.kubernetes_cluster.client_key
+  cluster_ca_certificate = module.kubernetes_cluster.cluster_ca_cert
+  load_config_file       = false
 }

@@ -1,16 +1,16 @@
 variable "iomete_monitoring_chart_version" {
   default = "The version of the monitoring Helm chart to use"
-  type = string
+  type    = string
 }
 
 variable "monitoring_namespace" {
   default = "The namespace where to install the monitoring chart"
-  type = string
+  type    = string
 }
 
 variable "control_plane_namespace" {
   default = "The namespace where the IOMETE control plane runs"
-  type = string
+  type    = string
 }
 
 variable "iomete_chart_museum_url" {
@@ -21,20 +21,20 @@ variable "iomete_chart_museum_url" {
 
 variable "postgresql_host" {
   description = "The postgresql hostname for IOMETE-system"
-  type = string
+  type        = string
 }
 
 variable "postgresql_port" {
   description = "The postgresql port to connect to"
-  type = number
+  type        = number
 }
 
 variable "postgresql_user" {
   description = "The username for the postgresql user to monitor postgresql"
-  type = string
+  type        = string
 }
 
 variable "postgresql_password" {
   description = "The password for the postgresql user to monitor postgresql"
-  type = string
+  type        = string
 }

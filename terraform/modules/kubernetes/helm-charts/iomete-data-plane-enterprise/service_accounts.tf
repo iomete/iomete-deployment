@@ -1,8 +1,8 @@
 resource "kubernetes_service_account" "lakehouse_service_account" {
   depends_on = [helm_release.iomete_crds]
   metadata {
-    name = "lakehouse-service-account"
-    namespace = var.namespace
+    name        = "lakehouse-service-account"
+    namespace   = var.namespace
     annotations = {}
   }
 
@@ -13,12 +13,12 @@ resource "kubernetes_service_account" "lakehouse_service_account" {
 
 resource "kubernetes_role" "iomete_lakehouse_role" {
   metadata {
-    name = "iomete-lakehouse-role"
+    name      = "iomete-lakehouse-role"
     namespace = var.namespace
   }
 
   rule {
-    verbs = ["*"]
+    verbs      = ["*"]
     api_groups = [""]
     resources = [
       "pods",
@@ -42,31 +42,31 @@ resource "kubernetes_role" "iomete_lakehouse_role" {
   }
 
   rule {
-    verbs = ["*"]
+    verbs      = ["*"]
     api_groups = ["networking.istio.io"]
-    resources = ["virtualservices"]
+    resources  = ["virtualservices"]
   }
 
   rule {
-    verbs = ["get"]
+    verbs      = ["get"]
     api_groups = [""]
-    resources = ["nodes"]
+    resources  = ["nodes"]
   }
 
   rule {
-    verbs = ["get", "list", "watch"]
+    verbs      = ["get", "list", "watch"]
     api_groups = [""]
-    resources = ["resourcequotas"]
+    resources  = ["resourcequotas"]
   }
 
   rule {
-    verbs = ["create", "get", "update", "delete"]
+    verbs      = ["create", "get", "update", "delete"]
     api_groups = ["apiextensions.k8s.io"]
-    resources = ["customresourcedefinitions"]
+    resources  = ["customresourcedefinitions"]
   }
 
   rule {
-    verbs = ["create", "get", "update", "delete"]
+    verbs      = ["create", "get", "update", "delete"]
     api_groups = ["admissionregistration.k8s.io"]
     resources = [
       "mutatingwebhookconfigurations",
@@ -75,7 +75,7 @@ resource "kubernetes_role" "iomete_lakehouse_role" {
   }
 
   rule {
-    verbs = ["*"]
+    verbs      = ["*"]
     api_groups = ["sparkoperator.k8s.io"]
     resources = [
       "*",
@@ -87,19 +87,19 @@ resource "kubernetes_role" "iomete_lakehouse_role" {
   }
 
   rule {
-    verbs = ["*"]
+    verbs      = ["*"]
     api_groups = ["helm.toolkit.fluxcd.io"]
-    resources = ["*"]
+    resources  = ["*"]
   }
 
   rule {
-    verbs = ["delete"]
+    verbs      = ["delete"]
     api_groups = ["batch"]
-    resources = ["jobs"]
+    resources  = ["jobs"]
   }
 
   rule {
-    verbs = ["*"]
+    verbs      = ["*"]
     api_groups = ["rbac.authorization.k8s.io"]
     resources = [
       "roles",
@@ -108,13 +108,13 @@ resource "kubernetes_role" "iomete_lakehouse_role" {
   }
 
   rule {
-    verbs = ["get", "list", "watch"]
+    verbs      = ["get", "list", "watch"]
     api_groups = ["events.k8s.io"]
-    resources = ["events"]
+    resources  = ["events"]
   }
 
   rule {
-    verbs = ["create", "get", "update", "delete"]
+    verbs      = ["create", "get", "update", "delete"]
     api_groups = [""]
     resources = [
       "services",
@@ -136,9 +136,9 @@ resource "kubernetes_role" "iomete_lakehouse_role" {
   }
 
   rule {
-    verbs = ["create", "update", "patch"]
+    verbs      = ["create", "update", "patch"]
     api_groups = [""]
-    resources = ["events"]
+    resources  = ["events"]
   }
 
   rule {
@@ -152,27 +152,27 @@ resource "kubernetes_role" "iomete_lakehouse_role" {
   }
 
   rule {
-    verbs = ["create", "get", "list", "watch", "update", "patch"]
+    verbs      = ["create", "get", "list", "watch", "update", "patch"]
     api_groups = ["coordination.k8s.io"]
-    resources = ["leases"]
+    resources  = ["leases"]
   }
 }
 
 resource "kubernetes_role_binding" "iomete_lakehouse_role_binding" {
   metadata {
-    name = "iomete-lakehouse-role-binding"
+    name      = "iomete-lakehouse-role-binding"
     namespace = var.namespace
   }
 
   role_ref {
-    kind     = "Role"
-    name     = kubernetes_role.iomete_lakehouse_role.metadata[0].name
+    kind      = "Role"
+    name      = kubernetes_role.iomete_lakehouse_role.metadata[0].name
     api_group = "rbac.authorization.k8s.io"
   }
 
   subject {
-    kind = "ServiceAccount"
-    name = kubernetes_service_account.lakehouse_service_account.metadata[0].name
+    kind      = "ServiceAccount"
+    name      = kubernetes_service_account.lakehouse_service_account.metadata[0].name
     namespace = ""
   }
 }

@@ -6,30 +6,35 @@ output "kube_config" {
 
 output "minio_admin_password" {
   description = "The minio adminstrator user account password"
-  value     = module.minio.root_password
-  sensitive = true
+  value       = module.minio.root_password
+  sensitive   = true
 }
 
 output "postgresql_admin_password" {
   description = "The postgresql admin user account password"
-  value     = module.postgresql_server.administrator_password
-  sensitive = true
+  value       = module.postgresql_server.administrator_password
+  sensitive   = true
 }
 
 output "postgresql_user_password" {
   description = "The postgresql IOMETE application user account password"
-  value     = module.postgresql_user.password
-  sensitive = true
+  value       = module.postgresql_user.password
+  sensitive   = true
 }
 
 output "iomete_console_admin_password" {
   description = "The admin password to login to the IOMETE web console"
-  value     = module.dataplane-enterprise.iomete_admin_password
-  sensitive = true
+  value       = module.dataplane-enterprise.iomete_admin_password
+  sensitive   = true
 }
 
 output "truststore_password" {
   description = "The password for the truststore containing the relevant certificates used by the applications"
-  value = module.dataplane-enterprise.truststore_password
-  sensitive = true
+  value       = module.dataplane-enterprise.truststore_password
+  sensitive   = true
+}
+
+output "kafka_bootstrap_servers" {
+  description = "Kafka bootstrap servers for client connections"
+  value       = var.enable_kafka ? module.kafka_cluster[0].kafka_bootstrap_servers : null
 }

@@ -17,7 +17,7 @@ resource "kubernetes_storage_class" "minio_storage_class" {
   }
 
   reclaim_policy      = "Delete"
-  volume_binding_mode = "Immediate"  # If set to something else, this might cause terraform to hang on creation
+  volume_binding_mode = "Immediate" # If set to something else, this might cause terraform to hang on creation
 }
 
 resource "kubernetes_persistent_volume_claim" "minio_pvc" {

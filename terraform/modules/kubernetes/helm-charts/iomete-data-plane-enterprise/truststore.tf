@@ -13,7 +13,7 @@ resource "random_password" "truststore_password" {
 
 resource "jks_trust_store" "truststore" {
   certificates = var.certificates
-  password = random_password.truststore_password.result
+  password     = random_password.truststore_password.result
 }
 
 resource "kubernetes_secret" "java-truststore" {

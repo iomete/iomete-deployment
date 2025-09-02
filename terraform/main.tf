@@ -3,7 +3,7 @@ locals {
   environment = "iomete-sample"
 
   # vm sizes to be used for k8 and postgresql
-  kubernetes_vm_size = "Standard_D4s_v3"
+  kubernetes_vm_size = "Standard_D16s_v3"
   postgresql_vm_size = "B_Standard_B1ms"
 
   # chart versions to install
@@ -75,6 +75,27 @@ module "minio" {
 
   kubernetes_storage_provisioner = "disk.csi.azure.com"
   namespace                      = module.kubernetes_infra_namespace.namespace_name
+  # storage_size                  = "128Gi"
+}
+
+module "airflow" {
+  count = var.enable_airflow ? 1 : 0
+
+  source = "./modules/kubernetes/helm-charts/airflow"
+
+  namespace = module.kubernetes_infra_namespace.namespace_name
+
+  # PostgreSQL connection details
+  postgresql_host     = module.postgresql_server.host
+  postgresql_port     = module.postgresql_server.port
+  postgresql_username = module.postgresql_user.username
+  postgresql_password = module.postgresql_user.password
+  postgresql_database = "airflow"
+
+  depends_on = [
+    module.kubernetes_cluster,
+    module.postgresql_user
+  ]
 }
 
 module "strimzi_kafka_operator" {

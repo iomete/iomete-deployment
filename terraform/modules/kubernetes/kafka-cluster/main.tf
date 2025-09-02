@@ -13,8 +13,8 @@ resource "kubectl_manifest" "kafka_node_pool" {
       replicas = var.kafka_replicas
       roles    = ["controller", "broker"]
       storage = {
-        type = "persistent-claim"
-        size = var.kafka_storage_size
+        type        = "persistent-claim"
+        size        = var.kafka_storage_size
         deleteClaim = var.delete_claim_on_destroy
       }
       resources = {
@@ -41,14 +41,14 @@ resource "kubectl_manifest" "kafka_cluster" {
       name      = var.cluster_name
       namespace = var.namespace
       annotations = {
-        "strimzi.io/kraft" = "enabled"
+        "strimzi.io/kraft"      = "enabled"
         "strimzi.io/node-pools" = "enabled"
       }
     }
     spec = {
       kafka = {
         version = var.kafka_version
-        
+
         listeners = [
           {
             name = "plain"
@@ -63,7 +63,7 @@ resource "kubectl_manifest" "kafka_cluster" {
             tls  = true
           }
         ]
-        
+
         config = {
           "offsets.topic.replication.factor"         = tostring(var.kafka_replicas)
           "transaction.state.log.replication.factor" = tostring(var.kafka_replicas)
@@ -72,7 +72,7 @@ resource "kubectl_manifest" "kafka_cluster" {
           "min.insync.replicas"                      = tostring(min(2, var.kafka_replicas))
         }
       }
-      
+
       entityOperator = {
         topicOperator = {
           resources = {
@@ -107,7 +107,7 @@ resource "kubectl_manifest" "kafka_cluster" {
 
 resource "kubectl_manifest" "kafka_topic_test" {
   count = var.create_test_topic ? 1 : 0
-  
+
   yaml_body = yamlencode({
     apiVersion = "kafka.strimzi.io/v1beta2"
     kind       = "KafkaTopic"
@@ -122,11 +122,11 @@ resource "kubectl_manifest" "kafka_topic_test" {
       partitions = 3
       replicas   = min(3, var.kafka_replicas)
       config = {
-        "retention.ms" = "604800000"  # 7 days
+        "retention.ms" = "604800000" # 7 days
       }
     }
   })
-  
+
   depends_on = [kubectl_manifest.kafka_cluster]
 }
 
@@ -145,11 +145,11 @@ resource "kubectl_manifest" "kafka_topic_events" {
       partitions = 3
       replicas   = min(3, var.kafka_replicas)
       config = {
-        "retention.ms" = "7200000"   # 2 hours
-        "segment.ms"   = "3600000"   # 1 hour segments
+        "retention.ms" = "7200000" # 2 hours
+        "segment.ms"   = "3600000" # 1 hour segments
       }
     }
   })
-  
+
   depends_on = [kubectl_manifest.kafka_cluster]
 }

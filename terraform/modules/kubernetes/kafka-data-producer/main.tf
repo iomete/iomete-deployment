@@ -27,7 +27,7 @@ resource "kubernetes_deployment" "kafka_data_producer" {
         container {
           name  = "kafka-data-producer"
           image = "python:3.9-slim"
-          
+
           command = ["/bin/bash"]
           args = [
             "-c",

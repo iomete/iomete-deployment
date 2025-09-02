@@ -50,9 +50,15 @@ variable "kafka_data_type" {
   description = "Type of data to generate in Kafka producer (e-commerce, iot, clickstream)"
   type        = string
   default     = "e-commerce"
-  
+
   validation {
     condition     = contains(["e-commerce", "iot", "clickstream"], var.kafka_data_type)
     error_message = "kafka_data_type must be one of: e-commerce, iot, clickstream"
   }
+}
+
+variable "enable_airflow" {
+  description = "Enable Apache Airflow deployment for workflow orchestration"
+  type        = bool
+  default     = true
 }

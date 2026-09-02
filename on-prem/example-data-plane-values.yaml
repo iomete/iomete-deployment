@@ -7,7 +7,7 @@ database:
   prefix: "iomete_" # all IOMETE databases should be prefixed with this. See database init script.
   adminCredentials:
     user: "postgres"
-    password: "onXB8UbEqYzkQFgbXe8F#C5ckmyKix&"
+    password: "<set-a-strong-password>"
   ssl:
     enabled: false # Enabling this will require javaTrustStore to be enabled and configured properly
     mode: "disable" # disable, verify-full

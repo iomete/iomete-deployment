@@ -25,7 +25,7 @@ database:
   # Provide database admin credentials to create the IOMETE databases, otherwise please run the database init script manually.
   adminCredentials:
     user: "postgres"
-    password: "onXB8UbEqYzkQFgbXe8F#C5ckmyKix&"
+    password: "<set-a-strong-password>"
     # # if passwordSecret is set, the password will be read from the secret
     passwordSecret: {}
     #   # name: byo-db-creds

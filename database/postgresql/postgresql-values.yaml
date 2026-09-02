@@ -1,6 +1,6 @@
 auth:
   enablePostgresUser: true
-  postgresPassword: "onXB8UbEqYzkQFgbXe8F#C5ckmyKix&"
+  postgresPassword: "<set-a-strong-password>"
 
 primary:
 

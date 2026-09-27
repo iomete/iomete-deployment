@@ -10,7 +10,7 @@ iomete/iom-connect-rest-client:1.2.0
 iomete/iom-openapi-ui:1.12.0
 iomete/iom-socket:1.10.0
 iomete/metastore:6.3.1
-iomete/enterprise-gateway:3.2.1
+iomete/enterprise-gateway:3.2.3
 iomete/iom-catalog-sync:1.13.0
 iomete/iomete_data_compaction:1.2.1
 iomete/presidio-analyzer:latest

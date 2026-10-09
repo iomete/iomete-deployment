@@ -52,7 +52,7 @@ spec:
             claimName: minio-fs-pvc
       containers:
         - name: minio
-          image: minio/minio
+          image: cgr.dev/chainguard/minio
           args:
             - server
             - /data

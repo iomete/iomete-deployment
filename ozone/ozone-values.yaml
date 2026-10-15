@@ -1,0 +1,48 @@
+# Apache Ozone test deployment for IOMETE.
+# Chart: ozone-helm/ozone 0.3.0 (https://apache.github.io/ozone-helm-charts/)
+#
+# Single datanode, one copy of each object (no redundancy), about 100GB of usable space.
+# For testing only.
+
+# Ozone runs as user "hadoop" (UID/GID 1000). fsGroup gives it write access to its
+# persistent volumes, including volumes that are created owned by root.
+securityContext:
+  fsGroup: 1000
+  fsGroupChangePolicy: OnRootMismatch
+
+env:
+  # Keep one copy of each object, since there is only one datanode.
+  - name: OZONE-SITE.XML_ozone.replication
+    value: "1"
+  - name: OZONE-SITE.XML_ozone.server.default.replication
+    value: "1"
+  # The chart makes safe mode wait for 3 datanodes, which a single datanode never satisfies.
+  - name: OZONE-SITE.XML_hdds.scm.safemode.enabled
+    value: "false"
+  # Each datanode keeps 20GB free per volume by default. Lower the reserve for test-sized volumes.
+  - name: OZONE-SITE.XML_hdds.datanode.volume.min.free.space
+    value: "2GB"
+
+om:
+  replicas: 1
+  persistence:
+    enabled: true
+    size: 10Gi
+    # storageClassName: <your-storage-class>
+
+scm:
+  replicas: 1
+  persistence:
+    enabled: true
+    size: 10Gi
+    # storageClassName: <your-storage-class>
+
+datanode:
+  replicas: 1
+  persistence:
+    enabled: true
+    size: 100Gi
+    # storageClassName: <your-storage-class>
+
+s3g:
+  replicas: 1

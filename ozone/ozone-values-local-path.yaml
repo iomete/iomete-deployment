@@ -5,7 +5,8 @@
 # /opt/local-path-provisioner. Install it first:
 #   kubectl apply -f https://raw.githubusercontent.com/rancher/local-path-provisioner/v0.0.37/deploy/local-path-storage.yaml
 #
-# Single datanode, one copy of each object (no redundancy), about 100GB of usable space.
+# local-path doesn't enforce volume sizes, so Ozone can use all free space on that disk.
+# Single datanode, one copy of each object (no redundancy), no authentication.
 # For testing only.
 
 # Ozone runs as user "hadoop" (UID/GID 1000). fsGroup gives it write access to its
@@ -20,7 +21,9 @@ env:
     value: "1"
   - name: OZONE-SITE.XML_ozone.server.default.replication
     value: "1"
-  # The chart makes safe mode wait for 3 datanodes, which a single datanode never satisfies.
+  # The chart hardcodes hdds.scm.safemode.min.datanode=3, and a second env entry with the
+  # same name is rejected by Helm 4 server-side apply. A single datanode never satisfies it,
+  # so disable safe mode instead.
   - name: OZONE-SITE.XML_hdds.scm.safemode.enabled
     value: "false"
   # Each datanode keeps 20GB free per volume by default. Lower the reserve for test-sized volumes.
@@ -31,27 +34,33 @@ om:
   replicas: 1
   persistence:
     enabled: true
-    size: 10Gi
     storageClassName: local-path
+  resources:
+    requests: { cpu: 250m, memory: 1Gi }
+    limits: { memory: 2Gi }
 
 scm:
   replicas: 1
   persistence:
     enabled: true
-    size: 10Gi
     storageClassName: local-path
+  resources:
+    requests: { cpu: 250m, memory: 1Gi }
+    limits: { memory: 2Gi }
 
 datanode:
   replicas: 1
   persistence:
     enabled: true
-    size: 100Gi
     storageClassName: local-path
+  resources:
+    requests: { cpu: 250m, memory: 1Gi }
+    limits: { memory: 2Gi }
 
+# The S3 Gateway stays ClusterIP: without authentication, Ozone accepts any access key,
+# so exposing it outside the cluster would expose all data. Use kubectl port-forward.
 s3g:
   replicas: 1
-  service:
-    rest:
-      # Reach the S3 API from outside the cluster at http://<node-ip>:31878
-      type: NodePort
-      nodePort: 31878 # range 30000-32767
+  resources:
+    requests: { cpu: 100m, memory: 512Mi }
+    limits: { memory: 1Gi }

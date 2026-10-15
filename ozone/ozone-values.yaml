@@ -16,7 +16,9 @@ env:
     value: "1"
   - name: OZONE-SITE.XML_ozone.server.default.replication
     value: "1"
-  # The chart makes safe mode wait for 3 datanodes, which a single datanode never satisfies.
+  # The chart hardcodes hdds.scm.safemode.min.datanode=3, and a second env entry with the
+  # same name is rejected by Helm 4 server-side apply. A single datanode never satisfies it,
+  # so disable safe mode instead.
   - name: OZONE-SITE.XML_hdds.scm.safemode.enabled
     value: "false"
   # Each datanode keeps 20GB free per volume by default. Lower the reserve for test-sized volumes.
@@ -29,6 +31,9 @@ om:
     enabled: true
     size: 10Gi
     # storageClassName: <your-storage-class>
+  resources:
+    requests: { cpu: 250m, memory: 1Gi }
+    limits: { memory: 2Gi }
 
 scm:
   replicas: 1
@@ -36,6 +41,9 @@ scm:
     enabled: true
     size: 10Gi
     # storageClassName: <your-storage-class>
+  resources:
+    requests: { cpu: 250m, memory: 1Gi }
+    limits: { memory: 2Gi }
 
 datanode:
   replicas: 1
@@ -43,6 +51,12 @@ datanode:
     enabled: true
     size: 100Gi
     # storageClassName: <your-storage-class>
+  resources:
+    requests: { cpu: 250m, memory: 1Gi }
+    limits: { memory: 2Gi }
 
 s3g:
   replicas: 1
+  resources:
+    requests: { cpu: 100m, memory: 512Mi }
+    limits: { memory: 1Gi }

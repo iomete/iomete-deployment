@@ -79,3 +79,9 @@ variable "recon_enabled" {
   type        = bool
   default     = true
 }
+
+variable "certificate_validity_hours" {
+  description = "How long the self-signed CA and server certificate stay valid. An apply after they expire creates new ones"
+  type        = number
+  default     = 8760 # 1 year
+}

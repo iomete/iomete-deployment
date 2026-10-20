@@ -56,6 +56,12 @@ variable "storage" {
   type        = any
 }
 
+variable "certificates" {
+  description = "(Optional) Extra CA certificates (PEM) IOMETE trusts, such as the CA of self-signed object storage"
+  type        = list(string)
+  default     = []
+}
+
 variable "extra_values" {
   description = "(Optional) Top-level chart values merged over the ones this module sets"
   type        = any

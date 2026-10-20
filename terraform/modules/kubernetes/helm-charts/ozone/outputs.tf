@@ -1,5 +1,5 @@
 output "api_endpoint" {
-  description = "Ozone S3 Gateway endpoint within the cluster"
+  description = "Ozone S3 Gateway HTTPS endpoint within the cluster"
   value       = local.s3_endpoint
 }
 
@@ -22,4 +22,9 @@ output "secret_key" {
 output "recon_service_name" {
   description = "Service of the Recon web UI (port 9888), when Recon is enabled"
   value       = var.recon_enabled ? "${var.release_name}-recon" : null
+}
+
+output "ca_cert_pem" {
+  description = "The self-signed CA the S3 Gateway's certificate is signed with, for clients to trust"
+  value       = tls_self_signed_cert.ca.cert_pem
 }

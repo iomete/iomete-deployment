@@ -49,7 +49,19 @@ locals {
     ingress = {
       httpsEnabled = false
     }
-  }, var.extra_values)
+    },
+    local.truststore_enabled ? {
+      javaTrustStore = {
+        enabled        = true
+        secretName     = kubernetes_secret_v1.java_truststore[0].metadata[0].name
+        fileName       = local.truststore_file_name
+        caCertFileName = local.ca_cert_file_name
+        password       = random_password.truststore_password[0].result
+        mountPath      = local.truststore_mount
+      }
+    } : {},
+    var.extra_values
+  )
 }
 
 resource "helm_release" "iomete-system" {

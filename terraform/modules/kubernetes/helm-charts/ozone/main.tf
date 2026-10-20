@@ -2,11 +2,26 @@
 #
 # One datanode stores one copy of each object, so there is no redundancy beyond the disk
 # itself. Ozone runs without Kerberos, so the S3 Gateway accepts any access/secret key pair.
-# It is only reachable inside the cluster, over HTTP. For testing, not production.
+# It is only reachable inside the cluster. IOMETE uses it over HTTPS with a self-signed
+# certificate (tls.tf). For testing, not production.
 
 locals {
-  s3_service_name = "${var.release_name}-s3g-rest"
-  s3_endpoint     = "http://${local.s3_service_name}.${var.namespace}.svc.cluster.local:9878"
+  # The chart's S3 Service only exposes the HTTP port, so HTTPS gets a Service of its own.
+  s3_https_service_name = "${var.release_name}-s3g-https"
+  s3_https_port         = 9879
+  s3_endpoint           = "https://${local.s3_https_service_name}.${var.namespace}.svc.cluster.local:${local.s3_https_port}"
+
+  # The chart mounts configuration.filesFrom here, in every Ozone pod.
+  config_dir = "/opt/hadoop/etc/hadoop"
+
+  keystore_password_env = {
+    valueFrom = {
+      secretKeyRef = {
+        name = kubernetes_secret_v1.ozone_tls.metadata[0].name
+        key  = "keystore-password"
+      }
+    }
+  }
 
   persistence = {
     enabled          = true
@@ -41,7 +56,34 @@ locals {
       { name = "OZONE-SITE.XML_hdds.scm.safemode.enabled", value = "false" },
       # Each datanode keeps 20GB free per volume by default, which is more than small volumes have.
       { name = "OZONE-SITE.XML_hdds.datanode.volume.min.free.space", value = "2GB" },
+
+      # HTTPS next to HTTP. HTTPS_ONLY would break the chart's probes, which use plain HTTP.
+      { name = "OZONE-SITE.XML_ozone.http.policy", value = "HTTP_AND_HTTPS" },
+      { name = "OZONE-SITE.XML_ozone.s3g.https-address", value = "0.0.0.0:${local.s3_https_port}" },
+
+      # The image turns <FILE>.<EXT>_<key> variables into config files, so these become
+      # ssl-server.xml and ssl-client.xml on Ozone's classpath.
+      { name = "SSL-SERVER.XML_ssl.server.keystore.location", value = "${local.config_dir}/keystore.jks" },
+      { name = "SSL-SERVER.XML_ssl.server.keystore.type", value = "jks" },
+      merge({ name = "SSL-SERVER.XML_ssl.server.keystore.password" }, local.keystore_password_env),
+      merge({ name = "SSL-SERVER.XML_ssl.server.keystore.keypassword" }, local.keystore_password_env),
+      { name = "SSL-CLIENT.XML_ssl.client.truststore.location", value = "${local.config_dir}/truststore.jks" },
+      { name = "SSL-CLIENT.XML_ssl.client.truststore.type", value = "jks" },
+      merge({ name = "SSL-CLIENT.XML_ssl.client.truststore.password" }, local.keystore_password_env),
     ]
+
+    configuration = {
+      filesFrom = [{
+        secret = {
+          name = kubernetes_secret_v1.ozone_tls.metadata[0].name
+          items = [
+            { key = "keystore.jks", path = "keystore.jks" },
+            { key = "truststore.jks", path = "truststore.jks" },
+            { key = "ca.crt", path = "ca.crt" },
+          ]
+        }
+      }]
+    }
 
     om = {
       replicas    = 1
@@ -113,6 +155,30 @@ resource "helm_release" "ozone" {
   values = [yamlencode(local.ozone_values)]
 }
 
+resource "kubernetes_service_v1" "s3g_https" {
+  metadata {
+    name      = local.s3_https_service_name
+    namespace = var.namespace
+  }
+
+  spec {
+    type = "ClusterIP"
+
+    selector = {
+      "app.kubernetes.io/name"      = "ozone"
+      "app.kubernetes.io/instance"  = var.release_name
+      "app.kubernetes.io/component" = "s3g"
+    }
+
+    port {
+      name        = "https"
+      port        = local.s3_https_port
+      target_port = local.s3_https_port
+      protocol    = "TCP"
+    }
+  }
+}
+
 resource "kubernetes_secret_v1" "ozone_s3_credentials" {
   metadata {
     name      = "ozone-s3-credentials"
@@ -154,9 +220,21 @@ resource "kubernetes_job_v1" "create_ozone_bucket" {
             value = "us-east-1"
           }
 
+          # Over HTTPS with the CA, so a TLS problem fails the apply here rather than in IOMETE.
           env {
             name  = "AWS_ENDPOINT_URL"
             value = local.s3_endpoint
+          }
+
+          env {
+            name  = "AWS_CA_BUNDLE"
+            value = "/etc/ozone-ca/ca.crt"
+          }
+
+          volume_mount {
+            name       = "ozone-ca"
+            mount_path = "/etc/ozone-ca"
+            read_only  = true
           }
 
           command = [
@@ -170,6 +248,17 @@ resource "kubernetes_job_v1" "create_ozone_bucket" {
               fi
             EOF
           ]
+        }
+
+        volume {
+          name = "ozone-ca"
+          secret {
+            secret_name = kubernetes_secret_v1.ozone_tls.metadata[0].name
+            items {
+              key  = "ca.crt"
+              path = "ca.crt"
+            }
+          }
         }
       }
     }
@@ -186,5 +275,5 @@ resource "kubernetes_job_v1" "create_ozone_bucket" {
     update = "10m"
   }
 
-  depends_on = [helm_release.ozone]
+  depends_on = [helm_release.ozone, kubernetes_service_v1.s3g_https]
 }

@@ -7,7 +7,9 @@ It creates:
 * An AKS cluster, with one autoscaling node pool of `Standard_D4s_v3` nodes (1 to 6 nodes).
 * An Azure Database for PostgreSQL Flexible Server for IOMETE's metadata, plus the `iomete_user` login IOMETE connects as.
 * [Apache Ozone](https://ozone.apache.org/) in namespace `infra`, as the S3-compatible object storage, with the `lakehouse` bucket.
+  Its S3 Gateway serves HTTPS with a self-signed certificate.
 * IOMETE (chart `iomete-data-plane-enterprise`) and the IOMETE monitoring chart in namespace `iomete-system`.
+  IOMETE trusts the Ozone CA through a `java-truststore` Secret with the public CAs plus the Ozone CA.
 
 This setup is for testing. Ozone runs as a single datanode with one copy of each object and without
 authentication, and PostgreSQL is reachable from the internet. See [Apache Ozone deployment](https://iomete.com/resources/deployment/ozone-deployment)
@@ -129,14 +131,25 @@ terraform output -raw iomete_console_admin_password
 
 All other sensitive outputs are in [outputs.tf](outputs.tf).
 
-To check the object storage, list the lakehouse bucket from inside the cluster:
+To check the object storage, list the lakehouse bucket over HTTPS from the S3 Gateway pod. The
+Ozone image includes the `aws` CLI, and the pod has the CA mounted:
 ```shell
-kubectl run s3-check -n infra --rm -it --restart=Never \
-  --image=public.ecr.aws/aws-cli/aws-cli:2.37.6 \
-  --env=AWS_ACCESS_KEY_ID=iomete \
-  --env=AWS_SECRET_ACCESS_KEY="$(terraform output -raw ozone_s3_secret_key)" \
-  --env=AWS_REGION=us-east-1 \
-  -- --endpoint-url http://ozone-s3g-rest.infra.svc.cluster.local:9878 s3 ls s3://lakehouse --recursive
+kubectl exec -n infra ozone-s3g-0 -- env \
+  AWS_ACCESS_KEY_ID=iomete \
+  AWS_SECRET_ACCESS_KEY="$(terraform output -raw ozone_s3_secret_key)" \
+  AWS_DEFAULT_REGION=us-east-1 \
+  aws --endpoint-url https://ozone-s3g-https.infra.svc.cluster.local:9879 \
+      --ca-bundle /opt/hadoop/etc/hadoop/ca.crt \
+      s3 ls s3://lakehouse --recursive
+```
+
+The bucket Job already runs this path on every apply: `create-ozone-bucket` in namespace `infra`
+talks to the S3 Gateway over HTTPS with the CA. If TLS is misconfigured, the apply fails there.
+
+To see the Ozone CA, and count the certificates in IOMETE's truststore (the public CAs plus the Ozone CA):
+```shell
+terraform output -raw ozone_ca_cert
+kubectl get secret java-truststore -n iomete-system -o jsonpath='{.data.ca\.crt}' | base64 -d | grep -c "BEGIN CERTIFICATE"
 ```
 
 To open Ozone's web UI, Recon, which shows the cluster health, datanodes and a browser for the buckets:

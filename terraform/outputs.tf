@@ -33,3 +33,8 @@ output "postgresql_user_password" {
   value       = module.postgresql_user.password
   sensitive   = true
 }
+
+output "ozone_ca_cert" {
+  description = "The self-signed CA of the Apache Ozone S3 Gateway, which IOMETE trusts"
+  value       = module.ozone.ca_cert_pem
+}

@@ -6,5 +6,14 @@ terraform {
     random = {
       source = "hashicorp/random"
     }
+    kubernetes = {
+      source = "hashicorp/kubernetes"
+    }
+    http = {
+      source = "hashicorp/http"
+    }
+    jks = {
+      source = "paragor/jks"
+    }
   }
 }

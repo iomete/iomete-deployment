@@ -92,7 +92,9 @@ module "dataplane-enterprise" {
 
   admin_email = var.iomete_admin_email
 
-  # Apache Ozone through its S3 Gateway
+  # Apache Ozone through its S3 Gateway, over HTTPS with a self-signed CA that IOMETE trusts
+  certificates = [module.ozone.ca_cert_pem]
+
   storage = {
     bucketName = module.ozone.bucket_name
     type       = "s3_compatible"

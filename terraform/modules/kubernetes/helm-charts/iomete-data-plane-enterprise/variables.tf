@@ -4,14 +4,8 @@ variable "namespace" {
 }
 
 variable "iomete_dataplane_enterprise_chart_version" {
-  description = "Version of the IOMETE dataplane enterprise Helm chart to install"
+  description = "Version of the IOMETE data plane enterprise Helm chart to install"
   type        = string
-}
-
-variable "iomete_dataplane_crds_chart_version" {
-  description = "Version of the IOMETE dataplane crds Helm chart to install"
-  type        = string
-  default     = "1.0.0"
 }
 
 variable "iomete_chart_museum_url" {
@@ -20,53 +14,50 @@ variable "iomete_chart_museum_url" {
   default     = "https://chartmuseum.iomete.com"
 }
 
+variable "admin_email" {
+  description = "Email of the IOMETE console admin user"
+  type        = string
+}
+
 variable "postgresql_host" {
-  description = "The postgresql hostname for IOMETE-system"
-  type = string
+  description = "The PostgreSQL hostname for IOMETE"
+  type        = string
 }
 
 variable "postgresql_port" {
-  description = "The postgresql port to connect to"
-  type = number
+  description = "The PostgreSQL port to connect to"
+  type        = number
 }
 
 variable "postgresql_admin_user" {
-  description = "The postgresql admin username"
-  type = string
+  description = "The PostgreSQL admin username, used to create the IOMETE databases"
+  type        = string
 }
 
 variable "postgresql_admin_password" {
-  description = "The postgresql admin username"
-  type = string
+  description = "The PostgreSQL admin password"
+  type        = string
+  sensitive   = true
 }
 
 variable "postgresql_user" {
-  description = "The username for the postgresql user iomete components will use"
-  type = string
+  description = "The PostgreSQL user the IOMETE services connect as"
+  type        = string
 }
 
 variable "postgresql_password" {
-  description = "The password for the postgresql user iomete components will use"
-  type = string
+  description = "The password of the PostgreSQL user the IOMETE services connect as"
+  type        = string
+  sensitive   = true
 }
 
-variable "minio_uri" {
-  description = "Minio URI to connect to for the lakehouse"
-  type = string
+variable "storage" {
+  description = "The chart's storage block (type, bucketName and the backend-specific settings)"
+  type        = any
 }
 
-variable "minio_username" {
-  description = "Username to use when connecting to Minio"
-  type = string
-}
-
-variable "minio_secret" {
-  description = "Password to use when connecting to Minio"
-  type = string
-}
-
-variable "certificates" {
-  description = "(Optional) list of certificates that will be placed in a truststore and used by the IOMETE services"
-  type = set(string)
-  default = []
+variable "extra_values" {
+  description = "(Optional) Top-level chart values merged over the ones this module sets"
+  type        = any
+  default     = {}
 }

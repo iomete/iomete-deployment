@@ -3,8 +3,11 @@ terraform {
     kubernetes = {
       source = "hashicorp/kubernetes"
     }
-    tls = {
-      source  = "hashicorp/tls"
+    helm = {
+      source = "hashicorp/helm"
+    }
+    random = {
+      source = "hashicorp/random"
     }
   }
 }

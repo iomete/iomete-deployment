@@ -51,14 +51,14 @@ variable "admin_username" {
 
 variable "tags" {
   description = "(Optional) Tags to apply to all resources"
-  type = map(string)
-  default = {}
+  type        = map(string)
+  default     = {}
 }
 
 variable "enable_public_access" {
   description = "(Optional) If this Postgresql instance should be publicly accessible"
-  type = bool
-  default = true
+  type        = bool
+  default     = true
 }
 
 variable "ip_range_access" {
@@ -71,4 +71,10 @@ variable "ip_range_access" {
     begin = "0.0.0.0"
     end   = "255.255.255.255"
   }
+}
+
+variable "extensions" {
+  description = "(Optional) PostgreSQL extensions databases are allowed to create"
+  type        = list(string)
+  default     = ["pg_trgm"]
 }

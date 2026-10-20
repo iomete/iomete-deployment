@@ -1,0 +1,13 @@
+# Copy to terraform.tfvars and fill in. terraform.tfvars is git-ignored.
+azure_subscription_id = "<your-azure-subscription-id>"
+azure_region          = "germanywestcentral"
+iomete_admin_email    = "admin@example.com"
+
+# Optional
+# azure_tenant_id                           = "<your-azure-tenant-id>"
+# environment_name                          = "iomete-sample"
+# iomete_dataplane_enterprise_chart_version = "4.0.1"
+# iomete_monitoring_chart_version           = "3.0.1"
+# postgresql_sku_name                       = "GP_Standard_D2ds_v5"
+# ozone_datanode_storage_size               = "100Gi"
+# ozone_recon_enabled                       = true

@@ -1,16 +1,58 @@
 resource "random_password" "iomete_admin_password" {
-  length  = 12
+  length  = 16
   special = true
   upper   = true
   lower   = true
   numeric = true
 }
 
-resource "helm_release" "iomete-system" {
-  depends_on = [
-    kubernetes_role_binding.iomete_lakehouse_role_binding, kubernetes_mutating_webhook_configuration.spark_operator_mutating_webhook
-  ]
+locals {
+  values = merge({
+    name = "iomete-data-plane"
 
+    adminUser = {
+      username          = "admin"
+      email             = var.admin_email
+      firstName         = "Admin"
+      lastName          = "Admin"
+      temporaryPassword = random_password.iomete_admin_password.result
+    }
+
+    database = {
+      type     = "postgresql"
+      host     = var.postgresql_host
+      port     = tostring(var.postgresql_port)
+      user     = var.postgresql_user
+      password = var.postgresql_password
+      prefix   = "iomete_"
+
+      # Lets the chart create IOMETE's databases on install.
+      adminCredentials = {
+        user     = var.postgresql_admin_user
+        password = var.postgresql_admin_password
+      }
+
+      ssl = {
+        enabled = false
+      }
+    }
+
+    storage = var.storage
+
+    # The chart creates the lakehouse service account and its RBAC, the Spark Operator CRDs
+    # and the Spark Operator webhook with its certificate.
+    serviceAccount = { create = true }
+    crds           = { create = true }
+    webhook        = { create = true }
+
+    # Plain HTTP behind kubectl port-forward. Turn on HTTPS once an ingress terminates TLS.
+    ingress = {
+      httpsEnabled = false
+    }
+  }, var.extra_values)
+}
+
+resource "helm_release" "iomete-system" {
   timeout    = 900 # 15 minutes
   name       = "data-plane"
   namespace  = var.namespace
@@ -18,55 +60,5 @@ resource "helm_release" "iomete-system" {
   chart      = "iomete-data-plane-enterprise"
   version    = var.iomete_dataplane_enterprise_chart_version
 
-  values = [
-    yamlencode({
-      name = "iomete-data-plane"
-
-      adminUser = {
-        username          = "admin"
-        email             = "rocco.verhoef@iomete.com"
-        firstName         = "admin"
-        lastName          = "admin"
-        temporaryPassword = random_password.iomete_admin_password.result
-      }
-
-      database = {
-        type     = "postgresql"
-        host     = var.postgresql_host
-        port     = var.postgresql_port
-        user     = var.postgresql_user
-        password = var.postgresql_password
-        prefix   = "iomete_"
-
-        adminCredentials = {
-          user     = var.postgresql_admin_user
-          password = var.postgresql_admin_password
-        }
-
-        ssl = {
-          enabled = false
-          # mode = "verify-full" # optional, can be added if needed
-        }
-      }
-
-      storage = {
-        bucketName = "lakehouse"
-        type       = "minio"
-
-        minioSettings = {
-          endpoint  = var.minio_uri
-          accessKey = var.minio_username
-          secretKey = var.minio_secret
-        }
-      }
-
-      javaTrustStore = {
-        enabled    = true
-        secretName = kubernetes_secret.java-truststore.metadata[0].name
-        fileName   = local.truststore_file_name
-        password   = random_password.truststore_password.result
-        mountPath  = "/etc/ssl/iomete-certs"
-      }
-    })
-  ]
+  values = [yamlencode(local.values)]
 }

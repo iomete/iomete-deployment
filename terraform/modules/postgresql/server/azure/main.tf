@@ -40,3 +40,11 @@ resource "azurerm_postgresql_flexible_server_firewall_rule" "allow_azure_service
   start_ip_address = var.ip_range_access.begin
   end_ip_address   = var.ip_range_access.end
 }
+
+# Azure only lets databases create extensions on this allowlist. IOMETE's job orchestrator
+# (Prefect) needs pg_trgm.
+resource "azurerm_postgresql_flexible_server_configuration" "extensions" {
+  name      = "azure.extensions"
+  value     = join(",", var.extensions)
+  server_id = azurerm_postgresql_flexible_server.postgres.id
+}

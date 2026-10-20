@@ -49,6 +49,11 @@ cp terraform.tfvars.example terraform.tfvars
 The file also lists the optional settings, such as the chart versions and the PostgreSQL size.
 `terraform.tfvars` is git-ignored.
 
+`iomete_dataplane_enterprise_chart_version` must be 3.19.1 or later. Earlier charts don't create the
+service account, the Spark Operator CRDs and webhook, and don't support `s3_compatible` storage, so
+`terraform plan` rejects them. To install an earlier version, follow
+[Installing 3.19.0 or Earlier](https://iomete.com/resources/deployment/on-prem/install#installing-3190-or-earlier).
+
 ### Terraform state (optional)
 
 By default Terraform keeps its state in a local `terraform.tfstate` file. To store it in Azure instead,

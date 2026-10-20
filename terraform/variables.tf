@@ -26,9 +26,24 @@ variable "iomete_admin_email" {
 }
 
 variable "iomete_dataplane_enterprise_chart_version" {
-  description = "(Optional) Version of the IOMETE data plane enterprise Helm chart"
+  description = "(Optional) Version of the IOMETE data plane enterprise Helm chart, 3.19.1 or later"
   type        = string
   default     = "4.0.1"
+
+  # The chart creates the service account, the Spark Operator CRDs and webhook, and supports
+  # s3_compatible storage from 3.19.1. Pre-releases of 3.19.1 (3.19.1-rcN) pass.
+  validation {
+    condition = can(regex("^\\d+\\.\\d+\\.\\d+", var.iomete_dataplane_enterprise_chart_version)) && try(
+      tonumber(split(".", var.iomete_dataplane_enterprise_chart_version)[0]) > 3 ||
+      (tonumber(split(".", var.iomete_dataplane_enterprise_chart_version)[0]) == 3 &&
+      tonumber(split(".", var.iomete_dataplane_enterprise_chart_version)[1]) > 19) ||
+      (tonumber(split(".", var.iomete_dataplane_enterprise_chart_version)[0]) == 3 &&
+        tonumber(split(".", var.iomete_dataplane_enterprise_chart_version)[1]) == 19 &&
+      tonumber(regex("^\\d+", split(".", var.iomete_dataplane_enterprise_chart_version)[2])) >= 1),
+      false
+    )
+    error_message = "This configuration needs iomete-data-plane-enterprise 3.19.1 or later: earlier charts don't create the service account, the Spark Operator CRDs and webhook, and don't support s3_compatible storage."
+  }
 }
 
 variable "iomete_monitoring_chart_version" {

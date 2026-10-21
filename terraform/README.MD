@@ -1,7 +1,19 @@
 ## Introduction
 
-This directory contains the [Terraform](https://www.terraform.io/) files to spin up a simple IOMETE environment in Azure. For now, the scripts only
-support Azure and AWS or GCP.
+This directory contains the [Terraform](https://www.terraform.io/) files to spin up a simple IOMETE environment in Azure.
+It creates:
+
+* A resource group, named after `environment_name` (`iomete-sample` by default).
+* An AKS cluster, with one autoscaling node pool of `Standard_D4s_v3` nodes (1 to 6 nodes).
+* An Azure Database for PostgreSQL Flexible Server for IOMETE's metadata, plus the `iomete_user` login IOMETE connects as.
+* [Apache Ozone](https://ozone.apache.org/) in namespace `infra`, as the S3-compatible object storage, with the `lakehouse` bucket.
+  Its S3 Gateway serves HTTPS with a self-signed certificate.
+* IOMETE (chart `iomete-data-plane-enterprise`) and the IOMETE monitoring chart in namespace `iomete-system`.
+  IOMETE trusts the Ozone CA through a `java-truststore` Secret with the public CAs plus the Ozone CA.
+
+This setup is for testing. Ozone runs as a single datanode with one copy of each object and without
+authentication, and PostgreSQL is reachable from the internet. See [Apache Ozone deployment](https://iomete.com/resources/deployment/ozone-deployment)
+for what a production object store needs.
 
 ## Environment setup
 
@@ -10,92 +22,150 @@ support Azure and AWS or GCP.
 To run this on your local machine, you will need the following CLI tools installed:
 * [kubectl](https://kubernetes.io/docs/tasks/tools/#kubectl)
 * [azure cli](https://learn.microsoft.com/en-us/cli/azure/?view=azure-cli-latest)
-* [terraform cli](https://developer.hashicorp.com/terraform/tutorials/aws-get-started/install-cli)
+* [terraform cli](https://developer.hashicorp.com/terraform/tutorials/aws-get-started/install-cli) 1.6 or later
 
-For those running on MacOS, using [homebrew](https://brew.sh/) you can run below commands to install:
+For those running on macOS, using [homebrew](https://brew.sh/) you can run below commands to install:
 ```shell
 brew update && brew upgrade
 brew install kubernetes-cli
-brew install terraform
-brew install az
+brew install hashicorp/tap/terraform
+brew install azure-cli
 ```
 
-### Configuring Azure storage backend
-
-When not using [Terraform cloud](https://app.terraform.io/session) or [Terraform Enterprise](https://developer.hashicorp.com/terraform/enterprise), terraform state can also be stored directly in Azure.
-This will require a [storage account](https://learn.microsoft.com/en-us/azure/storage/common/storage-account-overview) and a storage container. 
-
-The commands below help create those:
+Log in to Azure. Terraform uses this login:
 ```shell
-# this example creates the storage account in germany west. 
-# make sure you have a resource group created, here we assume Azure resource group `terraform-state-rg` exists
+az login
+```
+
+### Settings
+
+Copy the example settings file and fill it in:
+```shell
+cp terraform.tfvars.example terraform.tfvars
+```
+
+* `azure_subscription_id`: your [Azure subscription id](https://learn.microsoft.com/en-us/azure/azure-portal/get-subscription-tenant-id)
+* `azure_region`: the Azure region to create everything in, for example `germanywestcentral`
+* `iomete_admin_email`: the email of the IOMETE console admin user
+
+The file also lists the optional settings, such as the chart versions and the PostgreSQL size.
+`terraform.tfvars` is git-ignored.
+
+`iomete_dataplane_enterprise_chart_version` must be 3.19.1 or later. Earlier charts don't create the
+service account, the Spark Operator CRDs and webhook, and don't support `s3_compatible` storage, so
+`terraform plan` rejects them. To install an earlier version, follow
+[Installing 3.19.0 or Earlier](https://iomete.com/resources/deployment/on-prem/install#installing-3190-or-earlier).
+
+### Terraform state (optional)
+
+By default Terraform keeps its state in a local `terraform.tfstate` file. To store it in Azure instead,
+create a storage account and container:
+```shell
+# assumes the Azure resource group `terraform-state-rg` exists
 az storage account create \
-    --name iomete \
+    --name <unique-storage-account-name> \
     --resource-group terraform-state-rg \
     --location germanywestcentral \
     --sku Standard_LRS \
     --kind StorageV2 \
     --allow-blob-public-access false
 
-# configures the storage container in the account
 az storage container create \
     --name tfstate \
-    --account-name iomete
+    --account-name <unique-storage-account-name>
+```
+
+Then add an empty backend block to the `terraform` block in [providers.tf](providers.tf):
+```hcl
+backend "azurerm" {}
+```
+
+and pass its settings to `terraform init`:
+```shell
+terraform init \
+    -backend-config="resource_group_name=terraform-state-rg" \
+    -backend-config="storage_account_name=<unique-storage-account-name>" \
+    -backend-config="container_name=tfstate" \
+    -backend-config="key=iomete/kubernetes.tfstate"
 ```
 
 ## Creating a new IOMETE environment
 
 ### Installing IOMETE
 
-In file [variables.tf](), you will need to provide a number of values to initialize iomete:
-* your [Azure subscription id](https://learn.microsoft.com/en-us/azure/azure-portal/get-subscription-tenant-id)
-* your [Azure tenant id](https://learn.microsoft.com/en-us/azure/azure-portal/get-subscription-tenant-id)
-* the resource group name for the terraform state (`terraform-state-rg` in previous steps' example)
-* the storage account name for the terraform state (`iomete` in previous steps' example)
-* the storage container name for the terraform state (`tfstate` in previous steps' example)
-
-Once the storage backend has been set up and all CLI tools have been installed, we can initialize terraform: 
+Initialize Terraform:
 ```shell
-terraform init --upgrade
+terraform init -upgrade
 ```
 
-Now, let's examine the Terraform plan. This outputs what Terraform expects to do
+Look at what Terraform plans to create:
 ```shell
 terraform plan
 ```
 
-Once we think the plan looks good, we can apply the plan. Since we already looked at the plan in the above step,
-we add the `--auto-approve` flag to signal to Terraform it can go ahead and install the components.
+When the plan looks right, apply it:
 ```shell
-terraform apply --auto-approve
+terraform apply
 ```
+
+The first apply takes about 20 to 30 minutes. Most of it is the AKS cluster, the PostgreSQL server and
+the IOMETE Helm release.
 
 ### Testing IOMETE
 
-With the environment installed, we can now login to try it out. Our base Terraform here doesn't automatically add a 
-DNS entry or routing. This is left up to the user as this will specific to each companies polices and setup. For 
-simple testing here, we can use kubernetes port-forwarding. Below example assumes you have set the newly created
-Azure AKS cluster as your default context in `kubectl`.
+Point `kubectl` at the new cluster:
+```shell
+az aks get-credentials --resource-group iomete-sample --name iomete-sample-aks-cluster
+```
 
+This Terraform doesn't add a DNS entry or an ingress, since that depends on each company's setup.
+For testing, use port-forwarding:
 ```shell
 kubectl port-forward service/iom-gateway -n iomete-system 12345:80
 ```
 
-The passwords are auto generated by Terraform as well. To see a particular password, we can run below Terraform command
+Then open http://localhost:12345 and log in as `admin` with the temporary password, which you change on first login:
 ```shell
- terraform output iomete_console_admin_password
+terraform output -raw iomete_console_admin_password
 ```
 
-All other sensitive outputs can be found in the outputs.tf file.
+All other sensitive outputs are in [outputs.tf](outputs.tf).
 
+To check the object storage, list the lakehouse bucket over HTTPS from the S3 Gateway pod. The
+Ozone image includes the `aws` CLI, and the pod has the CA mounted:
+```shell
+kubectl exec -n infra ozone-s3g-0 -- env \
+  AWS_ACCESS_KEY_ID=iomete \
+  AWS_SECRET_ACCESS_KEY="$(terraform output -raw ozone_s3_secret_key)" \
+  AWS_DEFAULT_REGION=us-east-1 \
+  aws --endpoint-url https://ozone-s3g-https.infra.svc.cluster.local:9879 \
+      --ca-bundle /opt/hadoop/etc/hadoop/ca.crt \
+      s3 ls s3://lakehouse --recursive
+```
+
+The bucket Job already runs this path on every apply: `create-ozone-bucket` in namespace `infra`
+talks to the S3 Gateway over HTTPS with the CA. If TLS is misconfigured, the apply fails there.
+
+To see the Ozone CA, and count the certificates in IOMETE's truststore (the public CAs plus the Ozone CA):
+```shell
+terraform output -raw ozone_ca_cert
+kubectl get secret java-truststore -n iomete-system -o jsonpath='{.data.ca\.crt}' | base64 -d | grep -c "BEGIN CERTIFICATE"
+```
+
+To open Ozone's web UI, Recon, which shows the cluster health, datanodes and a browser for the buckets:
+```shell
+kubectl port-forward service/ozone-recon -n infra 9888:9888
+```
+Then open http://localhost:9888. Recon refreshes from Ozone every few minutes, so new data can take a while to appear.
+Set `ozone_recon_enabled = false` to leave it out.
 
 ### Tearing down the environment
 
 To remove the entire installation, you can run:
 
 ```shell
-terraform destroy --auto-approve
+terraform destroy
 ```
 
-In case of issues or terraform not being able to correcly spin down the environment, you can always choose
-to remove the entire resource-group from Azure.
+This deletes every disk, so all lakehouse data in Ozone is lost. In case of issues or Terraform not
+being able to correctly spin down the environment, you can always remove the entire resource group from Azure.

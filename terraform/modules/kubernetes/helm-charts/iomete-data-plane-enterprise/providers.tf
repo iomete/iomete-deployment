@@ -1,10 +1,16 @@
 terraform {
   required_providers {
-    kubernetes = {
-      source  = "hashicorp/kubernetes"
-    }
     helm = {
-      source  = "hashicorp/helm"
+      source = "hashicorp/helm"
+    }
+    random = {
+      source = "hashicorp/random"
+    }
+    kubernetes = {
+      source = "hashicorp/kubernetes"
+    }
+    http = {
+      source = "hashicorp/http"
     }
     jks = {
       source = "paragor/jks"

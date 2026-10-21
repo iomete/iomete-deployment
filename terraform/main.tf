@@ -1,24 +1,13 @@
 locals {
-  # name for the environment you are creating
-  environment = "iomete-sample"
-
-  # vm sizes to be used for k8 and postgresql
-  kubernetes_vm_size = "Standard_D4s_v3"
-  postgresql_vm_size = "B_Standard_B1ms"
-
-  # chart versions to install
-  iomete_dataplane_enterprise_chart_version = "3.8.1"
-  iomete_monitoring_chart_version           = "2.2.0"
-
   # additional tags that can be used for tracking/tagging/attribution/etc
   tags = {
-    Environment = local.environment
+    Environment = var.environment_name
     ManagedBy   = "Terraform"
   }
 }
 
 resource "azurerm_resource_group" "resource_group" {
-  name     = local.environment
+  name     = var.environment_name
   location = var.azure_region
   tags     = local.tags
 }
@@ -29,8 +18,10 @@ module "kubernetes_cluster" {
   resource_group_name = azurerm_resource_group.resource_group.name
   location            = azurerm_resource_group.resource_group.location
 
-  cluster_name = "${local.environment}-aks-cluster"
-  vm_size      = local.kubernetes_vm_size
+  cluster_name        = "${var.environment_name}-aks-cluster"
+  vm_size             = var.kubernetes_vm_size
+  min_number_of_nodes = var.kubernetes_min_nodes
+  max_number_of_nodes = var.kubernetes_max_nodes
 
   tags = local.tags
 }
@@ -41,8 +32,8 @@ module "postgresql_server" {
   location            = azurerm_resource_group.resource_group.location
   resource_group_name = azurerm_resource_group.resource_group.name
 
-  server_name    = "${local.environment}-postgresql"
-  sku_name       = local.postgresql_vm_size
+  server_name    = "${var.environment_name}-postgresql"
+  sku_name       = var.postgresql_sku_name
   admin_username = "iomete_admin"
 
   tags = local.tags
@@ -57,29 +48,27 @@ module "postgresql_user" {
 
   # user to create
   username = "iomete_user"
-
-  # details to connect to postgresql to execute user creation
-  admin_username = module.postgresql_server.administrator_username
-  admin_password = module.postgresql_server.administrator_password
-  host           = module.postgresql_server.host
-  port           = module.postgresql_server.port
 }
 
 module "kubernetes_infra_namespace" {
-  source    = "./modules/kubernetes/namespace"
+  depends_on = [module.kubernetes_cluster]
+  source     = "./modules/kubernetes/namespace"
+
   namespace = "infra"
 }
 
-module "minio" {
-  source = "./modules/kubernetes/helm-charts/minio"
+module "ozone" {
+  source = "./modules/kubernetes/helm-charts/ozone"
 
   kubernetes_storage_provisioner = "disk.csi.azure.com"
   namespace                      = module.kubernetes_infra_namespace.namespace_name
+  datanode_storage_size          = var.ozone_datanode_storage_size
+  recon_enabled                  = var.ozone_recon_enabled
 }
 
 module "iomete_control_plane_namespace" {
   depends_on = [module.kubernetes_cluster]
-  source = "./modules/kubernetes/namespace"
+  source     = "./modules/kubernetes/namespace"
 
   namespace = "iomete-system"
   labels = {
@@ -90,19 +79,31 @@ module "iomete_control_plane_namespace" {
 module "dataplane-enterprise" {
   source = "./modules/kubernetes/helm-charts/iomete-data-plane-enterprise"
 
+  # The lakehouse bucket must exist before IOMETE starts. The whole PostgreSQL module too, not
+  # just the server: changing max_connections restarts the server, and IOMETE's database setup
+  # job fails with "Connection refused" if it runs during that restart.
+  depends_on = [module.ozone, module.postgresql_server, module.postgresql_user]
+
   # chart version
-  iomete_dataplane_enterprise_chart_version = local.iomete_dataplane_enterprise_chart_version
+  iomete_dataplane_enterprise_chart_version = var.iomete_dataplane_enterprise_chart_version
 
   # control plane namespace
   namespace = module.iomete_control_plane_namespace.namespace_name
 
-  # certificates needed by apps to talk to various external services
-  certificates = [module.minio.cert_pem]
+  admin_email = var.iomete_admin_email
 
-  # minio connection details
-  minio_uri      = module.minio.api_endpoint
-  minio_username = module.minio.root_user
-  minio_secret = module.minio.root_password
+  # Apache Ozone through its S3 Gateway, over HTTPS with a self-signed CA that IOMETE trusts
+  certificates = [module.ozone.ca_cert_pem]
+
+  storage = {
+    bucketName = module.ozone.bucket_name
+    type       = "s3_compatible"
+    s3CompatibleSettings = {
+      endpoint  = module.ozone.api_endpoint
+      accessKey = module.ozone.access_key
+      secretKey = module.ozone.secret_key
+    }
+  }
 
   # postgresql connection details
   postgresql_host           = module.postgresql_server.host
@@ -111,16 +112,20 @@ module "dataplane-enterprise" {
   postgresql_password       = module.postgresql_user.password
   postgresql_admin_user     = module.postgresql_server.administrator_username
   postgresql_admin_password = module.postgresql_server.administrator_password
+
+  # any other chart values, for example smaller resource requests
+  extra_values = var.iomete_extra_values
 }
 
 module "monitoring" {
+  count  = var.enable_monitoring ? 1 : 0
   source = "./modules/kubernetes/helm-charts/iomete-monitoring-chart"
 
-  iomete_monitoring_chart_version = local.iomete_monitoring_chart_version
+  iomete_monitoring_chart_version = var.iomete_monitoring_chart_version
 
   # install monitoring in control-plane as well
   control_plane_namespace = module.iomete_control_plane_namespace.namespace_name
-  monitoring_namespace = module.iomete_control_plane_namespace.namespace_name
+  monitoring_namespace    = module.iomete_control_plane_namespace.namespace_name
 
   # postgresql connection details
   postgresql_host     = module.postgresql_server.host

@@ -22,7 +22,7 @@ variable "dns_prefix" {
 variable "kubernetes_version" {
   description = "(Optional) Kubernetes version to use"
   type        = string
-  default     = null  # Will use the latest version available as default
+  default     = null # Will use the latest version available as default
 }
 
 variable "min_number_of_nodes" {
@@ -51,6 +51,6 @@ variable "vm_size" {
 
 variable "tags" {
   description = "(Optional) Tags to apply to all resources"
-  type = map(string)
-  default = {}
+  type        = map(string)
+  default     = {}
 }

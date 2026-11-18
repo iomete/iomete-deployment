@@ -6,6 +6,7 @@ CREATE DATABASE iomete_iceberg_db;
 CREATE DATABASE iomete_metastore_db;
 CREATE DATABASE iomete_catalog_db;
 CREATE DATABASE iomete_mcp_db;
+CREATE DATABASE iomete_prefect_db;
 
 -- Create User
 CREATE USER iomete_user WITH PASSWORD 'iomete_pass';
@@ -18,6 +19,7 @@ GRANT ALL PRIVILEGES ON DATABASE iomete_iceberg_db TO iomete_user;
 GRANT ALL PRIVILEGES ON DATABASE iomete_metastore_db TO iomete_user;
 GRANT ALL PRIVILEGES ON DATABASE iomete_catalog_db TO iomete_user;
 GRANT ALL PRIVILEGES ON DATABASE iomete_mcp_db TO iomete_user;
+GRANT ALL PRIVILEGES ON DATABASE iomete_prefect_db TO iomete_user;
 
 -- Switch to created databases and grant privileges on public schema to the user (repeat for each database)
 GRANT ALL PRIVILEGES ON SCHEMA public TO iomete_user;
